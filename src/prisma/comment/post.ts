@@ -5,4 +5,4 @@ export default (data: {
     commentator: boolean
     messageData: Buffer
     messageVector: Buffer
-}) => prisma.reply.create({data, select: {id: true}})
+}) => prisma.reply.create({data, select: {id: true}}).then(({id}) => id)

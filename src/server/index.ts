@@ -5,8 +5,8 @@ export default <T>(handler: (request: NextRequest) => Promise<T>) => (request: N
     .catch(reason => {
         if (reason instanceof Error) {
             const {name, message, stack} = reason
-            return {error: {name, message, stack}}
+            return {reason: {name, message, stack}}
         }
-        return {error: {name: 'UnknownError', message: String(reason)}}
+        return {reason: {name: 'UnknownError', message: String(reason)}}
     })
     .then(value => NextResponse.json(value))

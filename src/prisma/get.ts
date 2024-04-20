@@ -11,4 +11,8 @@ export default ({lt}: { lt?: number }) => prisma.topic.findMany({
         createdAt: true,
         message: true
     }
-})
+}).then(value => value.map(({id, createdAt, message}) => ({
+    id,
+    create: createdAt.valueOf(),
+    message
+})))

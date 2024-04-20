@@ -1,4 +1,5 @@
 import prisma from "@/prisma";
+import to from "@/base64/to";
 
 export default ({id, lt}: { id: number, lt?: number }) => prisma.comment.findUniqueOrThrow({
     where: {id},
@@ -34,4 +35,21 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.comment.findUni
             }
         }
     }
-})
+}).then(({Topic, createdAt, messageData, messageVector, _count, Reply}) => ({
+    parent: {
+        id: Topic.id,
+        create: Topic.createdAt.valueOf(),
+        message: Topic.message
+    },
+    create: createdAt.valueOf(),
+    messageData: to(messageData),
+    messageVector: to(messageVector),
+    count: _count.Reply,
+    list: Reply.map(({id, createdAt, commentator, messageData, messageVector}) => ({
+        id,
+        create: createdAt.valueOf(),
+        commentator,
+        messageData: to(messageData),
+        messageVector: to(messageVector)
+    }))
+}))

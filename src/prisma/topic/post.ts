@@ -6,4 +6,4 @@ export default (data: {
     keyWrapped: Buffer
     messageData: Buffer
     messageVector: Buffer
-}) => prisma.comment.create({data, select: {id: true}})
+}) => prisma.comment.create({data, select: {id: true}}).then(({id}) => id)
