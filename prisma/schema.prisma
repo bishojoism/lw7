@@ -22,7 +22,7 @@ model Comment {
   topicId       Int
   id            Int      @id @default(autoincrement())
   createdAt     DateTime @default(now())
-  keyVefify     Bytes    @unique
+  keyVerify     Bytes    @unique
   keyWrapped    Bytes    @unique
   messageData   Bytes
   messageVector Bytes    @unique
