@@ -4,8 +4,8 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.topic.findUniqu
     where: {id},
     select: {
         createdAt: true,
-        message: true,
         keyWrap: true,
+        message: true,
         _count: {
             select: {
                 Comment: true

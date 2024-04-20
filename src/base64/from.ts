@@ -1,0 +1,1 @@
+export default (arg: string) => Buffer.from(arg, 'base64')
