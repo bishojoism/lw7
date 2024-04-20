@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Topic {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  keyVerify Bytes     @unique
+  keyWrap   Bytes     @unique
+  message   String
+  Comment   Comment[]
+}
+
+model Comment {
+  Topic         Topic    @relation(fields: [topicId], references: [id])
+  topicId       Int
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  keyVefify     Bytes    @unique
+  keyWrapped    Bytes    @unique
+  messageData   Bytes
+  messageVector Bytes    @unique
+  Reply         Reply[]
+}
+
+model Reply {
+  Comment       Comment  @relation(fields: [commentId], references: [id])
+  commentId     Int
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  commentator   Boolean
+  messageData   Bytes
+  messageVector Bytes    @unique
+}
