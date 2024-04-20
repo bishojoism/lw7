@@ -27,8 +27,9 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.topic.findUniqu
             }
         }
     }
-}).then(({createdAt, message, _count, Comment}) => ({
+}).then(({createdAt, keyWrap, message, _count, Comment}) => ({
     create: createdAt.valueOf(),
+    keyWrap: to(keyWrap),
     message,
     count: _count.Comment,
     list: Comment.map(({id, createdAt, keyWrapped, messageData, messageVector}) => ({

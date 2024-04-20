@@ -1,7 +1,7 @@
 import {z, ZodTypeAny} from "zod";
 import VError from "verror";
 
-export default (value: ZodTypeAny) => {
+export default <T extends ZodTypeAny>(value: T) => {
     const schema = z.object({
         value
     }).strict().or(z.object({
@@ -11,7 +11,7 @@ export default (value: ZodTypeAny) => {
             stack: z.string().optional()
         })
     }).strict())
-    return async (input: string, init?: RequestInit) => {
+    return async (input: string, init?: RequestInit): Promise<z.infer<T>> => {
         const result = schema.parse(await fetch(input, init).then(res => res.json()))
         if ('reason' in result) {
             const {name, message, stack} = result.reason
