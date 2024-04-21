@@ -30,13 +30,14 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.comment.findUni
             }
         }
     }
-}).then(({Topic, createdAt, messageData, messageVector, Reply}) => ({
+}).then(({Topic, createdAt, keyWrapped, messageData, messageVector, Reply}) => ({
     parent: {
         id: Topic.id,
         create: Topic.createdAt.valueOf(),
         message: Topic.message
     },
     create: createdAt.valueOf(),
+    keyWrapped: to(keyWrapped),
     messageData: to(messageData),
     messageVector: to(messageVector),
     list: Reply.map(({id, createdAt, commentator, messageData, messageVector}) => ({
