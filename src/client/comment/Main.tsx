@@ -13,8 +13,9 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/compo
 import Await from "@/components/Await";
 import {decrypt, importKey} from "@/crypto/symmetric";
 import {importUnwrapKey, unwrap} from "@/crypto/asymmetric";
-import {z} from "zod";
 import Link from "next/link";
+import {z} from "zod";
+import Async from "@/components/Async";
 
 const poster = client(z.undefined())
 const getter = client(z.object({
@@ -99,54 +100,48 @@ export default function Main({commentId, initialData}: {
                 if (unwrapKeyData !== null) return unwrap(keyWrapped, await importUnwrapKey(from(unwrapKeyData)))
             }, [commentId, parentId, keyWrapped])}>
                 {res =>
-                    <Content
-                        secret={res}
-                        commentId={commentId}
-                        at={at}
-                        messageData={messageData}
-                        messageVector={messageVector}
-                        list={list}
-                    />}
+                    <>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>
+                                    {"#"}
+                                    {commentId}
+                                </CardTitle>
+                                <CardDescription>{at}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {res === undefined ?
+                                    <Lock/> :
+                                    <Show secret={res} messageData={messageData} messageVector={messageVector}/>}
+                            </CardContent>
+                        </Card>
+                        <Async fn={async () => {
+                            const result = parse(await getter(`/api/comment?id=${commentId}`))
+                            setData(result)
+                        }}>刷新</Async>
+                        <ul className="space-y-4">
+                            {list.map(({id, at, commentator, messageData, messageVector}) =>
+                                <li key={id}>
+
+                                </li>)}
+                        </ul>
+                        <Async fn={async () => {
+                            const result = parse(await getter(`/api/comment?id=${commentId}&lt=${list[list.length - 1].id}`))
+                            setData({...result, list: [...list, ...result.list]})
+                        }}>加载</Async>
+                    </>}
             </Await>
         </div>
     )
 }
 
-function Content({secret, commentId, at, messageData, messageVector, list}: {
-    secret?: CryptoKey
-    commentId: number
-    at: ReturnType<typeof parse>['at']
-    messageData: ReturnType<typeof parse>['messageData']
-    messageVector: ReturnType<typeof parse>['messageVector']
-    list: ReturnType<typeof parse>['list']
-}) {
+function Show({secret, messageData, messageVector}: { secret: CryptoKey, messageData: Buffer, messageVector: Buffer }) {
     return (
-        <>
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        {"#"}
-                        {commentId}
-                    </CardTitle>
-                    <CardDescription>{at}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {secret === undefined ?
-                        <Lock/> :
-                        <Await fn={useCallback(async () =>
-                                Buffer.from(await decrypt(secret, [messageVector, messageData])).toString(),
-                            []
-                        )}>
-                            {res => <p className="whitespace-pre-wrap break-all">{res}</p>}
-                        </Await>}
-                </CardContent>
-            </Card>
-            <ul className="space-y-4">
-                {list.map(({id, at, commentator, messageData, messageVector}) =>
-                    <li key={id}>
-
-                    </li>)}
-            </ul>
-        </>
+        <Await fn={useCallback(async () =>
+                Buffer.from(await decrypt(secret, [messageVector, messageData])).toString(),
+            [secret, messageData, messageVector]
+        )}>
+            {res => <p className="whitespace-pre-wrap break-all">{res}</p>}
+        </Await>
     )
 }

@@ -84,13 +84,28 @@ export default function Main({topicId, initialData}: {
                         onChange={event => setMsg(event.target.value)}
                     />
                     <Await fn={useCallback(() => importWrapKey(keyWrap), [keyWrap])}>
-                        {value =>
-                            <Post
-                                wrapKey={value}
-                                topicId={topicId}
-                                message={msg ?? ''}
-                                delMessage={() => setMsg(undefined)}
-                            />}
+                        {res =>
+                            <Async fn={async () => {
+                                const key = await generateSymmetricKey()
+                                const [vector, data] = await encrypt(key, Buffer.from(msg ?? ''))
+                                const {signKey, verifyKey} = await generateDigitalKey()
+                                const body = JSON.stringify({
+                                    topicId,
+                                    keyVerify: to(Buffer.from(await exportVerifyKey(verifyKey))),
+                                    keyWrapped: to(Buffer.from(await wrap(key, res))),
+                                    messageData: to(Buffer.from(data)),
+                                    messageVector: to(Buffer.from(vector)),
+                                })
+                                const id = idSchema.parse(await poster('/api/topic', {
+                                    method: 'POST',
+                                    headers: {Authorization: to(Buffer.from(await sign(signKey, Buffer.from(body))))},
+                                    body
+                                }))
+                                localStorage.setItem(`signKey->${id}`, to(Buffer.from(await exportSignKey(signKey))))
+                                localStorage.setItem(`key->${id}`, to(Buffer.from(await exportKey(key))))
+                                setMsg(undefined)
+                                push(`/comment/${id}`)
+                            }}>提交</Async>}
                     </Await>
                 </CollapsibleContent>
             </Collapsible>
@@ -102,7 +117,35 @@ export default function Main({topicId, initialData}: {
                 const unwrapKeyData = localStorage.getItem(`unwrapKey-${topicId}`)
                 return unwrapKeyData === null ? undefined : importUnwrapKey(from(unwrapKeyData))
             }, [topicId])}>
-                {value => <Get unwrapKey={value} list={list}/>}
+                {res =>
+                    <ul className="space-y-4">
+                        {list.map(({id, at, keyWrapped, messageData, messageVector}) =>
+                            <li key={id}>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>
+                                            <Link
+                                                className="text-[#1a0dab] visited:text-[#6c00a2] dark:text-[#8ab4f8] dark:visited:text-[#c58af9] hover:underline"
+                                                href={`/comment/${id}`}
+                                            >
+                                                {"#"}
+                                                {id}
+                                            </Link>
+                                        </CardTitle>
+                                        <CardDescription>{at}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Show
+                                            id={id}
+                                            unwrapKey={res}
+                                            keyWrapped={keyWrapped}
+                                            messageData={messageData}
+                                            messageVector={messageVector}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </li>)}
+                    </ul>}
             </Await>
             <Async fn={async () => {
                 const result = parse(await getter(`/api/topic?id=${topicId}&lt=${list[list.length - 1].id}`))
@@ -112,69 +155,21 @@ export default function Main({topicId, initialData}: {
     )
 }
 
-function Post({wrapKey, topicId, message, delMessage}: {
-    wrapKey: CryptoKey
-    topicId: number
-    message: string
-    delMessage: () => void
-}) {
-    const {push} = useRouter()
-    return <Async fn={async () => {
-        const key = await generateSymmetricKey()
-        const [vector, data] = await encrypt(key, Buffer.from(message))
-        const {signKey, verifyKey} = await generateDigitalKey()
-        const body = JSON.stringify({
-            topicId,
-            keyVerify: to(Buffer.from(await exportVerifyKey(verifyKey))),
-            keyWrapped: to(Buffer.from(await wrap(key, wrapKey))),
-            messageData: to(Buffer.from(data)),
-            messageVector: to(Buffer.from(vector)),
-        })
-        const id = idSchema.parse(await poster('/api/topic', {
-            method: 'POST',
-            headers: {Authorization: to(Buffer.from(await sign(signKey, Buffer.from(body))))},
-            body
-        }))
-        localStorage.setItem(`signKey->${id}`, to(Buffer.from(await exportSignKey(signKey))))
-        localStorage.setItem(`key->${id}`, to(Buffer.from(await exportKey(key))))
-        delMessage()
-        push(`/comment/${id}`)
-    }}>提交</Async>
-}
-
-function Get({unwrapKey, list}: {
+function Show({id, unwrapKey, keyWrapped, messageData, messageVector}: {
+    id: number
     unwrapKey?: CryptoKey
-    list: ReturnType<typeof parse>['list']
+    keyWrapped: Buffer
+    messageData: Buffer
+    messageVector: Buffer
 }) {
     return (
-        <ul className="space-y-4">
-            {list.map(({id, at, keyWrapped, messageData, messageVector}) =>
-                <li key={id}>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>
-                                <Link
-                                    className="text-[#1a0dab] visited:text-[#6c00a2] dark:text-[#8ab4f8] dark:visited:text-[#c58af9] hover:underline"
-                                    href={`/comment/${id}`}
-                                >
-                                    {"#"}
-                                    {id}
-                                </Link>
-                            </CardTitle>
-                            <CardDescription>{at}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Await fn={useCallback(async () => {
-                                const keyData = localStorage.getItem(`key->${id}`)
-                                return keyData === null ?
-                                    unwrapKey && Buffer.from(await decrypt(await unwrap(keyWrapped, unwrapKey), [messageVector, messageData])).toString() :
-                                    Buffer.from(await decrypt(await importKey(from(keyData)), [messageVector, messageData])).toString()
-                            }, [id, unwrapKey, keyWrapped, messageData, messageVector])}>
-                                {value => value === undefined ? <Lock/> : <p className="whitespace-pre-wrap break-all">{value}</p>}
-                            </Await>
-                        </CardContent>
-                    </Card>
-                </li>)}
-        </ul>
+        <Await fn={useCallback(async () => {
+            const keyData = localStorage.getItem(`key->${id}`)
+            return keyData === null ?
+                unwrapKey && Buffer.from(await decrypt(await unwrap(keyWrapped, unwrapKey), [messageVector, messageData])).toString() :
+                Buffer.from(await decrypt(await importKey(from(keyData)), [messageVector, messageData])).toString()
+        }, [id, unwrapKey, keyWrapped, messageData, messageVector])}>
+            {res => res === undefined ? <Lock/> : <p className="whitespace-pre-wrap break-all">{res}</p>}
+        </Await>
     )
 }
