@@ -6,11 +6,11 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.comment.findUni
     select: {
         Topic: {
             select: {
-                id: true,
                 createdAt: true,
                 message: true
             }
         },
+        topicId: true,
         createdAt: true,
         keyWrapped: true,
         messageData: true,
@@ -30,12 +30,12 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.comment.findUni
             }
         }
     }
-}).then(({Topic, createdAt, keyWrapped, messageData, messageVector, Reply}) => ({
+}).then(({Topic, topicId, createdAt, keyWrapped, messageData, messageVector, Reply}) => ({
     parent: {
-        id: Topic.id,
         create: Topic.createdAt.valueOf(),
         message: Topic.message
     },
+    parentId: topicId,
     create: createdAt.valueOf(),
     keyWrapped: to(keyWrapped),
     messageData: to(messageData),

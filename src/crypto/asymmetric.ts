@@ -10,4 +10,4 @@ export const importWrapKey = (wrapKeyData: BufferSource) => crypto.subtle.import
 export const exportUnwrapKey = (unwrapKey: CryptoKey) => crypto.subtle.exportKey('pkcs8', unwrapKey)
 export const importUnwrapKey = (unwrapKeyData: BufferSource) => crypto.subtle.importKey('pkcs8', unwrapKeyData, rsaHashed, false, ['unwrapKey'])
 export const wrap = (key: CryptoKey, wrapKey: CryptoKey) => crypto.subtle.wrapKey('raw', key, wrapKey, rsa)
-export const unwrap = (keyData: BufferSource, unwrapKey: CryptoKey) => crypto.subtle.unwrapKey('raw', keyData, unwrapKey, rsa, aes, false, ['encrypt', 'decrypt'])
+export const unwrap = (wrappedKeyData: BufferSource, unwrapKey: CryptoKey) => crypto.subtle.unwrapKey('raw', wrappedKeyData, unwrapKey, rsa, aes, false, ['encrypt', 'decrypt'])

@@ -44,17 +44,15 @@ const parse = ({create, keyWrap, message, list}: Awaited<ReturnType<typeof get>>
         at: new Date(create).toLocaleString(),
         keyWrapped: from(keyWrapped),
         messageData: from(messageData),
-        messageVector: from(messageVector),
+        messageVector: from(messageVector)
     }))
 })
-
 export default function Main({topicId, initialData}: {
     topicId: number
     initialData: Awaited<ReturnType<typeof get>>
 }) {
-    const [data, setData] = useState(parse(initialData))
+    const [{keyWrap, at, message, list}, setData] = useState(parse(initialData))
     const [msg, setMsg] = useLocalStorage(`msg->${topicId}`)
-    const {keyWrap, at, message, list} = data
     const {push} = useRouter()
     return (
         <div className="container py-8 space-y-6">
@@ -100,15 +98,15 @@ export default function Main({topicId, initialData}: {
                 const result = parse(await getter(`/api/topic?id=${topicId}`))
                 setData(result)
             }}>刷新</Async>
-            <Await fn={async () => {
+            <Await fn={useCallback(async () => {
                 const unwrapKeyData = localStorage.getItem(`unwrapKey-${topicId}`)
-                return unwrapKeyData === null ? undefined : await importUnwrapKey(from(unwrapKeyData))
-            }}>
+                return unwrapKeyData === null ? undefined : importUnwrapKey(from(unwrapKeyData))
+            }, [topicId])}>
                 {value => <Get unwrapKey={value} list={list}/>}
             </Await>
             <Async fn={async () => {
-                const result = parse(await getter(`/api/topic?id=${topicId}&lt=${data.list[data.list.length - 1].id}`))
-                setData({...result, list: [...data.list, ...result.list]})
+                const result = parse(await getter(`/api/topic?id=${topicId}&lt=${list[list.length - 1].id}`))
+                setData({...result, list: [...list, ...result.list]})
             }}>加载</Async>
         </div>
     )
@@ -166,23 +164,17 @@ function Get({unwrapKey, list}: {
                             <CardDescription>{at}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Await fn={async () => {
-                                const keyData = localStorage.getItem(`topic-key-${id}`)
+                            <Await fn={useCallback(async () => {
+                                const keyData = localStorage.getItem(`key->${id}`)
                                 return keyData === null ?
                                     unwrapKey && Buffer.from(await decrypt(await unwrap(keyWrapped, unwrapKey), [messageVector, messageData])).toString() :
                                     Buffer.from(await decrypt(await importKey(from(keyData)), [messageVector, messageData])).toString()
-                            }}>
-                                {value => <Item message={value}/>}
+                            }, [id, unwrapKey, keyWrapped, messageData, messageVector])}>
+                                {value => value === undefined ? <Lock/> : <p className="whitespace-pre-wrap break-all">{value}</p>}
                             </Await>
                         </CardContent>
                     </Card>
                 </li>)}
         </ul>
     )
-}
-
-export function Item({message}: {
-    message?: string
-}) {
-    return message === undefined ? <Lock/> : <p className="whitespace-pre-wrap break-all">{message}</p>
 }

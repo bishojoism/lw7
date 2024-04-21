@@ -28,7 +28,6 @@ const parse = (data: Awaited<ReturnType<typeof get>>) => data.map(({id, create, 
     at: new Date(create).toLocaleString(),
     message
 }))
-
 export default function Main({initialData}: {
     initialData: Awaited<ReturnType<typeof get>>
 }) {
