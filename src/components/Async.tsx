@@ -1,21 +1,20 @@
-import {useState} from "react";
+import {forwardRef, ReactNode, useState} from "react";
 import {Button} from "@/components/ui/button";
-import {useToast} from "@/components/ui/use-toast";
-import {ToastAction} from "@/components/ui/toast";
+import Report from "@/components/Report";
 
-export default function Async({fn, children}: { fn: () => Promise<void>, children: string }) {
-    const [loading, setLoading] = useState(false)
-    const {toast} = useToast()
-    const handleClick = () => {
-        setLoading(true)
-        fn()
-            .catch(reason => toast({
-                variant: 'destructive',
-                title: reason instanceof Error ? reason.toString() : String(reason),
-                description: reason instanceof Error && reason.stack,
-                action: <ToastAction altText={`重试${children}`} onClick={handleClick}>重试</ToastAction>
-            }))
-            .finally(() => setLoading(false))
-    }
-    return <Button variant="secondary" disabled={loading} onClick={handleClick}>{children}</Button>
+interface AsyncProps {
+    fn: () => Promise<void>
+    children?: ReactNode
 }
+
+export default forwardRef<HTMLButtonElement, AsyncProps>(function Async({fn, children}, ref) {
+    const [error, setError] = useState<Error | null>()
+    const handleClick = () => {
+        setError(null)
+        fn()
+            .then(() => setError(undefined))
+            .catch(reason => setError(reason instanceof Error ? reason : new Error(String(reason))))
+    }
+    if (error instanceof Error) return <Report error={error} onRetry={handleClick}/>
+    return <Button variant="secondary" disabled={error === null} onClick={handleClick} ref={ref}>{children}</Button>
+})

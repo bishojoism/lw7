@@ -5,7 +5,6 @@ import {cn} from "@/lib/utils"
 import {ReactNode} from "react";
 import Providers from "@/app/Providers";
 import {name, short_name} from "@/../public/manifest.json";
-import {Toaster} from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
     title: short_name,
@@ -23,7 +22,6 @@ export default function RootLayout({children}: { children: ReactNode }) {
         <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
         <Providers>
             {children}
-            <Toaster/>
         </Providers>
         </body>
         </html>

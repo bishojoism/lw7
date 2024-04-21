@@ -6,6 +6,6 @@ export default function useLocalStorage(key: string, defaultValue?: string): [st
         if (typeof window === 'undefined') return
         if (value === undefined) window.localStorage.removeItem(key)
         else window.localStorage.setItem(key, value)
-    }, [value])
+    }, [key, value])
     return [value, setValue]
 }

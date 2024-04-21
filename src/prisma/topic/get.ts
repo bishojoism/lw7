@@ -7,11 +7,6 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.topic.findUniqu
         createdAt: true,
         keyWrap: true,
         message: true,
-        _count: {
-            select: {
-                Comment: true
-            }
-        },
         Comment: {
             ...lt !== undefined && {where: {id: {lt}}},
             orderBy: {
@@ -27,11 +22,10 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.topic.findUniqu
             }
         }
     }
-}).then(({createdAt, keyWrap, message, _count, Comment}) => ({
+}).then(({createdAt, keyWrap, message, Comment}) => ({
     create: createdAt.valueOf(),
     keyWrap: to(keyWrap),
     message,
-    count: _count.Comment,
     list: Comment.map(({id, createdAt, keyWrapped, messageData, messageVector}) => ({
         id,
         create: createdAt.valueOf(),

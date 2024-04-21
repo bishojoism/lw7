@@ -15,11 +15,6 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.comment.findUni
         keyWrapped: true,
         messageData: true,
         messageVector: true,
-        _count: {
-            select: {
-                Reply: true
-            }
-        },
         Reply: {
             ...lt !== undefined && {where: {id: {lt}}},
             orderBy: {
@@ -35,7 +30,7 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.comment.findUni
             }
         }
     }
-}).then(({Topic, createdAt, messageData, messageVector, _count, Reply}) => ({
+}).then(({Topic, createdAt, messageData, messageVector, Reply}) => ({
     parent: {
         id: Topic.id,
         create: Topic.createdAt.valueOf(),
@@ -44,7 +39,6 @@ export default ({id, lt}: { id: number, lt?: number }) => prisma.comment.findUni
     create: createdAt.valueOf(),
     messageData: to(messageData),
     messageVector: to(messageVector),
-    count: _count.Reply,
     list: Reply.map(({id, createdAt, commentator, messageData, messageVector}) => ({
         id,
         create: createdAt.valueOf(),
