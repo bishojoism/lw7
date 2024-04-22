@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "migrate": "dotenv -e .env.development.local prisma migrate dev",
+    "migrate": "dotenv -e .env.local prisma migrate dev",
     "postinstall": "prisma generate",
     "dev": "next dev --turbo",
     "build": "next build",

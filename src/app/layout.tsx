@@ -8,7 +8,8 @@ import {name, short_name} from "@/../public/manifest.json";
 
 export const metadata: Metadata = {
     title: short_name,
-    description: name
+    description: name,
+    manifest: '/manifest.json'
 }
 
 const fontSans = FontSans({
