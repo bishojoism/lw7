@@ -1,6 +1,6 @@
 'use client'
 
-import {short_name} from "@/../public/manifest.json";
+import {name} from "@/../public/manifest.json";
 import client from "@/client";
 import get from "@/prisma/topic/get";
 import {useRouter} from "next/navigation";
@@ -56,7 +56,7 @@ export default function Main({topicId, initialData}: {
     const {push} = useRouter()
     return (
         <div className="container py-8 space-y-6">
-            <title>{`>${topicId}|${short_name}`}</title>
+            <title>{`>${topicId}|${name}`}</title>
             <div className="flex items-center justify-between">
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">主题</h1>
                 <div className="space-x-2">

@@ -6,7 +6,7 @@ import from from "@/base64/from";
 import {useCallback, useState} from "react";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import {useRouter} from "next/navigation";
-import {short_name} from "@/../public/manifest.json";
+import {name} from "@/../public/manifest.json";
 import {Button} from "@/components/ui/button";
 import {Download, Home, Lock} from "lucide-react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
@@ -75,7 +75,7 @@ export default function Main({commentId, initialData}: {
     const {push} = useRouter()
     return (
         <div className="container py-8 space-y-6">
-            <title>{`#${commentId}|${short_name}`}</title>
+            <title>{`#${commentId}|${name}`}</title>
             <div className="flex items-center justify-between">
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">评论</h1>
                 <div className="space-x-2">

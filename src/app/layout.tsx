@@ -4,11 +4,11 @@ import type {Metadata} from "next";
 import {cn} from "@/lib/utils"
 import {ReactNode} from "react";
 import Providers from "@/app/Providers";
-import {name, short_name, icons} from "@/../public/manifest.json";
+import {name, description, icons} from "@/../public/manifest.json";
 
 export const metadata: Metadata = {
-    title: short_name,
-    description: name,
+    title: name,
+    description,
     manifest: '/manifest.json',
     icons: icons.map(({src, sizes, type}) => ({url: src, sizes, type}))
 }

@@ -8,7 +8,7 @@ import idSchema from "@/client/idSchema";
 import client from "@/client";
 import to from "@/base64/to";
 import get from "@/prisma/get";
-import {short_name} from "@/../public/manifest.json";
+import {name} from "@/../public/manifest.json";
 import {z} from "zod";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Textarea} from "@/components/ui/textarea";
@@ -38,7 +38,7 @@ export default function Main({initialData}: {
     const {push} = useRouter()
     return (
         <div className="container py-8 space-y-6">
-            <title>{`首页|${short_name}`}</title>
+            <title>{`首页|${name}`}</title>
             <div className="flex items-center justify-between">
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">首页</h1>
                 <Button
