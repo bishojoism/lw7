@@ -11,11 +11,11 @@ import get from "@/prisma/get";
 import {short_name} from "@/../public/manifest.json";
 import {z} from "zod";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import Link from "next/link";
 import {Textarea} from "@/components/ui/textarea";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import Async from "@/components/Async";
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
+import Anchor from "@/components/Anchor";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -78,13 +78,7 @@ export default function Main({initialData}: {
                         <Card>
                             <CardHeader>
                                 <CardTitle>
-                                    <Link
-                                        className="text-[#1a0dab] visited:text-[#6c00a2] dark:text-[#8ab4f8] dark:visited:text-[#c58af9] hover:underline"
-                                        href={`/topic/${id}`}
-                                    >
-                                        {">"}
-                                        {id}
-                                    </Link>
+                                    <Anchor href={`/topic/${id}`}>{">"}{id}</Anchor>
                                 </CardTitle>
                                 <CardDescription>{at}</CardDescription>
                             </CardHeader>

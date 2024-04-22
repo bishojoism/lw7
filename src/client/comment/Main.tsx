@@ -13,9 +13,10 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/compo
 import Await from "@/components/Await";
 import {decrypt, importKey} from "@/crypto/symmetric";
 import {importUnwrapKey, unwrap} from "@/crypto/asymmetric";
-import Link from "next/link";
 import {z} from "zod";
 import Async from "@/components/Async";
+import {cn} from "@/lib/utils";
+import Anchor from "@/components/Anchor";
 
 const poster = client(z.undefined())
 const getter = client(z.object({
@@ -79,13 +80,7 @@ export default function Main({commentId, initialData}: {
             <Card>
                 <CardHeader>
                     <CardTitle>
-                        <Link
-                            className="text-[#1a0dab] visited:text-[#6c00a2] dark:text-[#8ab4f8] dark:visited:text-[#c58af9] hover:underline"
-                            href={`/topic/${parentId}`}
-                        >
-                            {">"}
-                            {parentId}
-                        </Link>
+                        <Anchor href={`/topic/${parentId}`}>{">"}{parentId}</Anchor>
                     </CardTitle>
                     <CardDescription>{parent.at}</CardDescription>
                 </CardHeader>
@@ -103,16 +98,17 @@ export default function Main({commentId, initialData}: {
                     <>
                         <Card>
                             <CardHeader>
-                                <CardTitle>
-                                    {"#"}
-                                    {commentId}
-                                </CardTitle>
+                                <CardTitle>{"#"}{commentId}</CardTitle>
                                 <CardDescription>{at}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {res === undefined ?
                                     <Lock/> :
-                                    <Show secret={res} messageData={messageData} messageVector={messageVector}/>}
+                                    <Show
+                                        res={res}
+                                        messageData={messageData}
+                                        messageVector={messageVector}
+                                    />}
                             </CardContent>
                         </Card>
                         <Async fn={async () => {
@@ -122,7 +118,24 @@ export default function Main({commentId, initialData}: {
                         <ul className="space-y-4">
                             {list.map(({id, at, commentator, messageData, messageVector}) =>
                                 <li key={id}>
-
+                                    <div className={cn("flex", commentator ?
+                                        "justify-start" :
+                                        "justify-end")}>
+                                        <div className={cn("rounded-2xl", commentator ?
+                                            "rounded-tr ml-2" :
+                                            "rounded-tl mr-2")}>
+                                            {res === undefined ?
+                                                <Lock/> :
+                                                <Show
+                                                    res={res}
+                                                    messageData={messageData}
+                                                    messageVector={messageVector}/>}
+                                            <div className="flex justify-between text-muted-foreground">
+                                                <span>{"&"}{id}</span>
+                                                <span>{at}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </li>)}
                         </ul>
                         <Async fn={async () => {
@@ -135,11 +148,11 @@ export default function Main({commentId, initialData}: {
     )
 }
 
-function Show({secret, messageData, messageVector}: { secret: CryptoKey, messageData: Buffer, messageVector: Buffer }) {
+function Show({res, messageData, messageVector}: { res: CryptoKey, messageData: Buffer, messageVector: Buffer }) {
     return (
         <Await fn={useCallback(async () =>
-                Buffer.from(await decrypt(secret, [messageVector, messageData])).toString(),
-            [secret, messageData, messageVector]
+                Buffer.from(await decrypt(res, [messageVector, messageData])).toString(),
+            [res, messageData, messageVector]
         )}>
             {res => <p className="whitespace-pre-wrap break-all">{res}</p>}
         </Await>

@@ -17,10 +17,10 @@ import to from "@/base64/to";
 import {decrypt, encrypt, exportKey, generateSymmetricKey, importKey} from "@/crypto/symmetric";
 import Await from "@/components/Await";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import Link from "next/link";
 import {Home, Lock} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
+import Anchor from "@/components/Anchor";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -63,10 +63,7 @@ export default function Main({topicId, initialData}: {
             </div>
             <Card>
                 <CardHeader>
-                    <CardTitle>
-                        {">"}
-                        {topicId}
-                    </CardTitle>
+                    <CardTitle>{">"}{topicId}</CardTitle>
                     <CardDescription>{at}</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -124,13 +121,7 @@ export default function Main({topicId, initialData}: {
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>
-                                            <Link
-                                                className="text-[#1a0dab] visited:text-[#6c00a2] dark:text-[#8ab4f8] dark:visited:text-[#c58af9] hover:underline"
-                                                href={`/comment/${id}`}
-                                            >
-                                                {"#"}
-                                                {id}
-                                            </Link>
+                                            <Anchor href={`/comment/${id}`}>{"#"}{id}</Anchor>
                                         </CardTitle>
                                         <CardDescription>{at}</CardDescription>
                                     </CardHeader>
