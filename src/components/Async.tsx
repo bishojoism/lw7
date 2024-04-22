@@ -1,13 +1,11 @@
-import {forwardRef, ReactNode, useState} from "react";
+import {ReactNode, useState} from "react";
 import {Button} from "@/components/ui/button";
 import Report from "@/components/Report";
 
-interface AsyncProps {
+export default function Async({fn, children}: {
     fn: () => Promise<void>
     children?: ReactNode
-}
-
-export default forwardRef<HTMLButtonElement, AsyncProps>(function Async({fn, children}, ref) {
+}) {
     const [error, setError] = useState<Error | null>()
     const handleClick = () => {
         setError(null)
@@ -16,5 +14,5 @@ export default forwardRef<HTMLButtonElement, AsyncProps>(function Async({fn, chi
             .catch(reason => setError(reason instanceof Error ? reason : new Error(String(reason))))
     }
     if (error instanceof Error) return <Report error={error} onRetry={handleClick}/>
-    return <Button variant="secondary" disabled={error === null} onClick={handleClick} ref={ref}>{children}</Button>
-})
+    return <Button variant="secondary" disabled={error === null} onClick={handleClick}>{children}</Button>
+}

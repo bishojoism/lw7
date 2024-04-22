@@ -3,7 +3,7 @@
 import get from "@/prisma/comment/get";
 import client from "@/client";
 import from from "@/base64/from";
-import {useCallback, useRef, useState} from "react";
+import {useCallback, useState} from "react";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import {useRouter} from "next/navigation";
 import {short_name} from "@/../public/manifest.json";
@@ -22,8 +22,7 @@ import {Textarea} from "@/components/ui/textarea";
 import {importSignKey, sign} from "@/crypto/digital";
 import to from "@/base64/to";
 
-const poster = client(z.undefined())
-const getter = client(z.object({
+const fetcher = client(z.object({
     parent: z.object({
         create: z.number(),
         message: z.string()
@@ -74,7 +73,6 @@ export default function Main({commentId, initialData}: {
     const [{parent, parentId, at, keyWrapped, messageData, messageVector, list}, setData] = useState(parse(initialData))
     const [msg, setMsg] = useLocalStorage(`msg-#${commentId}`)
     const {push} = useRouter()
-    const ref = useRef<HTMLButtonElement>(null)
     return (
         <div className="container py-8 space-y-6">
             <title>{`#${commentId}|${short_name}`}</title>
@@ -146,19 +144,19 @@ export default function Main({commentId, initialData}: {
                                         messageData: to(Buffer.from(data)),
                                         messageVector: to(Buffer.from(vector)),
                                     })
-                                    await poster('/api/comment', {
+                                    const result = await fetcher('/api/comment', {
                                         method: 'POST',
                                         headers: {Authorization: to(Buffer.from(await sign(res.signKey, Buffer.from(body))))},
                                         body
                                     })
+                                    setData(parse(result))
                                     setMsg(undefined)
-                                    ref.current?.click()
                                 }}>发送</Async>
                             </div>}
                         <Async fn={async () => {
-                            const result = parse(await getter(`/api/comment?id=${commentId}`))
+                            const result = parse(await fetcher(`/api/comment?id=${commentId}`))
                             setData(result)
-                        }} ref={ref}>刷新</Async>
+                        }}>刷新</Async>
                         <ul className="space-y-4">
                             {list.map(({id, at, commentator, messageData, messageVector}) =>
                                 <li key={id}>
@@ -183,7 +181,7 @@ export default function Main({commentId, initialData}: {
                                 </li>)}
                         </ul>
                         <Async fn={async () => {
-                            const result = parse(await getter(`/api/comment?id=${commentId}&lt=${list[list.length - 1].id}`))
+                            const result = parse(await fetcher(`/api/comment?id=${commentId}&lt=${list[list.length - 1].id}`))
                             setData({...result, list: [...list, ...result.list]})
                         }}>加载</Async>
                     </>}
