@@ -1,17 +1,13 @@
 'use client'
 
-import {ReactNode} from "react";
-import {ThemeProvider} from "next-themes";
+import {ReactNode, useEffect} from "react";
+import {useMediaQuery} from "react-responsive";
 
 export default function Providers({children}: { children: ReactNode }) {
-    return (
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-        >
-            {children}
-        </ThemeProvider>
-    )
+    const dark = useMediaQuery({query: '(prefers-color-scheme: dark)'})
+    useEffect(() => {
+        if (dark) document.documentElement.classList.add('dark')
+        else document.documentElement.classList.remove('dark')
+    }, [dark])
+    return children
 }
