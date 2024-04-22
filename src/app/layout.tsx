@@ -4,12 +4,13 @@ import type {Metadata} from "next";
 import {cn} from "@/lib/utils"
 import {ReactNode} from "react";
 import Providers from "@/app/Providers";
-import {name, short_name} from "@/../public/manifest.json";
+import {name, short_name, icons} from "@/../public/manifest.json";
 
 export const metadata: Metadata = {
     title: short_name,
     description: name,
-    manifest: '/manifest.json'
+    manifest: '/manifest.json',
+    icons: icons.map(({src, sizes, type}) => ({url: src, sizes, type}))
 }
 
 const fontSans = FontSans({
