@@ -45,7 +45,7 @@ export default function Main({initialData}: {
                         className="resize-none my-4"
                         autoFocus
                         placeholder="内容将公开可见"
-                        value={msg}
+                        value={msg ?? ''}
                         onChange={event => setMsg(event.target.value)}
                     />
                     <Async fn={async () => {

@@ -12,7 +12,9 @@ export default function Report({error, onRetry}: { error: Error, onRetry: () => 
             <Button variant="outline" size="icon" onClick={onRetry} asChild>
                 <RefreshCw className="w-4 h-4"/>
             </Button>
-            <AlertTitle>{error.toString()}</AlertTitle>
+            <AlertTitle>
+                <pre className="overflow-auto">{error.toString()}</pre>
+            </AlertTitle>
             <AlertDescription>
                 <pre className="overflow-auto">{error.stack}</pre>
             </AlertDescription>

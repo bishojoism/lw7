@@ -5,4 +5,4 @@ export default (data: {
     commentator: boolean
     messageData: Buffer
     messageVector: Buffer
-}) => prisma.reply.create({data, select: {}}).then(({}) => undefined)
+}) => prisma.reply.create({data, select: {id: true}}).then(_ => undefined)

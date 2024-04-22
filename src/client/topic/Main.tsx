@@ -82,7 +82,7 @@ export default function Main({topicId, initialData}: {
                         className="resize-none my-4"
                         autoFocus
                         placeholder="内容将受端到端加密保护"
-                        value={msg}
+                        value={msg ?? ''}
                         onChange={event => setMsg(event.target.value)}
                     />
                     <Await fn={useCallback(() => importWrapKey(keyWrap), [keyWrap])}>
