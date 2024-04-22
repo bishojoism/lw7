@@ -17,6 +17,7 @@ import {z} from "zod";
 import Async from "@/components/Async";
 import {cn} from "@/lib/utils";
 import Anchor from "@/components/Anchor";
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
 
 const poster = client(z.undefined())
 const getter = client(z.object({
@@ -77,17 +78,6 @@ export default function Main({commentId, initialData}: {
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">评论</h1>
                 <Button variant="outline" size="icon" onClick={() => push('/')}><Home className="w-4 h-4"/></Button>
             </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        <Anchor href={`/topic/${parentId}`}>{">"}{parentId}</Anchor>
-                    </CardTitle>
-                    <CardDescription>{parent.at}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="whitespace-pre-wrap break-all">{parent.message}</p>
-                </CardContent>
-            </Card>
             <Await fn={useCallback(async () => {
                 const keyData = localStorage.getItem(`key->${commentId}`)
                 if (keyData !== null) return importKey(from(keyData))
@@ -96,21 +86,37 @@ export default function Main({commentId, initialData}: {
             }, [commentId, parentId, keyWrapped])}>
                 {res =>
                     <>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>{"#"}{commentId}</CardTitle>
-                                <CardDescription>{at}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {res === undefined ?
-                                    <Lock/> :
-                                    <Show
-                                        res={res}
-                                        messageData={messageData}
-                                        messageVector={messageVector}
-                                    />}
-                            </CardContent>
-                        </Card>
+                        <Collapsible>
+                            <CollapsibleTrigger>显示内容</CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <Card className="my-4">
+                                    <CardHeader>
+                                        <CardTitle>
+                                            <Anchor href={`/topic/${parentId}`}>{">"}{parentId}</Anchor>
+                                        </CardTitle>
+                                        <CardDescription>{parent.at}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="whitespace-pre-wrap break-all">{parent.message}</p>
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>{"#"}{commentId}</CardTitle>
+                                        <CardDescription>{at}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {res === undefined ?
+                                            <Lock/> :
+                                            <Show
+                                                res={res}
+                                                messageData={messageData}
+                                                messageVector={messageVector}
+                                            />}
+                                    </CardContent>
+                                </Card>
+                            </CollapsibleContent>
+                        </Collapsible>
                         <Async fn={async () => {
                             const result = parse(await getter(`/api/comment?id=${commentId}`))
                             setData(result)

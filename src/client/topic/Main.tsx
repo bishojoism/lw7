@@ -61,15 +61,20 @@ export default function Main({topicId, initialData}: {
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">主题</h1>
                 <Button variant="outline" size="icon" onClick={() => push('/')}><Home className="w-4 h-4"/></Button>
             </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>{">"}{topicId}</CardTitle>
-                    <CardDescription>{at}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="whitespace-pre-wrap break-all">{message}</p>
-                </CardContent>
-            </Card>
+            <Collapsible>
+                <CollapsibleTrigger>显示内容</CollapsibleTrigger>
+                <CollapsibleContent>
+                    <Card className="mt-4">
+                        <CardHeader>
+                            <CardTitle>{">"}{topicId}</CardTitle>
+                            <CardDescription>{at}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="whitespace-pre-wrap break-all">{message}</p>
+                        </CardContent>
+                    </Card>
+                </CollapsibleContent>
+            </Collapsible>
             <Collapsible>
                 <CollapsibleTrigger>创建评论</CollapsibleTrigger>
                 <CollapsibleContent>
