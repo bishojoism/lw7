@@ -8,7 +8,7 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import {useRouter} from "next/navigation";
 import {short_name} from "@/../public/manifest.json";
 import {Button} from "@/components/ui/button";
-import {Home, Lock} from "lucide-react";
+import {Download, Home, Lock} from "lucide-react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import Await from "@/components/Await";
 import {decrypt, encrypt, importKey} from "@/crypto/symmetric";
@@ -78,7 +78,22 @@ export default function Main({commentId, initialData}: {
             <title>{`#${commentId}|${short_name}`}</title>
             <div className="flex items-center justify-between">
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">评论</h1>
-                <Button variant="outline" size="icon" onClick={() => push('/')}><Home className="w-4 h-4"/></Button>
+                <div className="space-x-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => push('/')}
+                    >
+                        <Home className="w-4 h-4"/>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => push('https://github.com/bishojoism/lw7/releases/latest')}
+                    >
+                        <Download className="w-4 h-4"/>
+                    </Button>
+                </div>
             </div>
             <Await fn={useCallback(async () => {
                 const keyData = localStorage.getItem(`key->${commentId}`)

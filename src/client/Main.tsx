@@ -16,6 +16,8 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import Async from "@/components/Async";
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
 import Anchor from "@/components/Anchor";
+import {Button} from "@/components/ui/button";
+import {Download} from "lucide-react";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -37,7 +39,16 @@ export default function Main({initialData}: {
     return (
         <div className="container py-8 space-y-6">
             <title>{`首页|${short_name}`}</title>
-            <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">首页</h1>
+            <div className="flex items-center justify-between">
+                <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">首页</h1>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => push('https://github.com/bishojoism/lw7/releases/latest')}
+                >
+                    <Download className="w-4 h-4"/>
+                </Button>
+            </div>
             <Collapsible>
                 <CollapsibleTrigger>创建主题</CollapsibleTrigger>
                 <CollapsibleContent>
