@@ -1,7 +1,8 @@
 import server from "@/server";
-import ltSchema from "@/server/ltSchema";
+import tSchema from "@/server/tSchema";
 import get from "@/prisma/get";
 
 export default server(async ({nextUrl: {searchParams}}) => get({
-    lt: ltSchema.parse(searchParams.get('lt') ?? undefined)
+    lt: tSchema.parse(searchParams.get('lt') ?? undefined),
+    gt: tSchema.parse(searchParams.get('gt') ?? undefined)
 }))
