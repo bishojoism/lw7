@@ -41,6 +41,7 @@ export default async ({id, lt, gt}: { id: number, lt?: number, gt?: number }) =>
             }
         }
     })
+    if (gt !== undefined) Reply.reverse()
     return {
         parent: {
             create: Topic.createdAt.valueOf(),

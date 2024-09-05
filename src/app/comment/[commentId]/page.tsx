@@ -3,7 +3,7 @@
 import get from "@/prisma/comment/get";
 import client from "@/client";
 import from from "@/base64/from";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useMemo, useState} from "react";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import {useRouter} from "next/navigation";
 import {name} from "@/../public/manifest.json";
@@ -73,25 +73,28 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
     const [data, setData] = useState<ReturnType<typeof parse>>()
     const [msg, setMsg] = useLocalStorage(`msg-#${commentId}`)
     const {push} = useRouter()
-    const refresh = async () => {
+    const refresh = useCallback(async () => {
         const result = parse(await getter(`/api/comment?id=${commentId}`))
         setData(result)
-    }
-    const lock = useState(false)
-    const [target, setTarget] = useState<number>()
-    useEffect(() => {
-        (async () => {
-            lock[1](true)
-            if (target !== undefined && data !== undefined)
-                if (data.list.length) {
-                    if (data.list[0].id < target) {
-                        const result = parse(await getter(`/api/comment?id=${commentId}&gt=${data.list[0].id}`))
-                        setData({...result, list: [...result.list.reverse(), ...data.list]})
-                    } else setTarget(undefined)
-                } else await refresh()
-            lock[1](false)
-        })().then()
-    }, [target, data])
+    }, [commentId])
+    const loadNew = useCallback(async () => {
+        if (data?.list.length) {
+            const result = parse(await getter(`/api/comment?id=${commentId}&gt=${data.list[0].id}`))
+            setData(data => data === undefined ? result : {
+                ...result,
+                list: [...result.list.reverse(), ...data.list]
+            })
+        } else await refresh()
+    }, [data, refresh, commentId])
+    const loadOld = useCallback(async () => {
+        if (data?.list.length) {
+            const result = parse(await getter(`/api/comment?id=${commentId}&lt=${data.list[data.list.length - 1].id}`))
+            setData(data => data === undefined ? result : {
+                ...result,
+                list: [...data.list, ...result.list]
+            })
+        } else await refresh()
+    }, [data, refresh, commentId])
     return (
         <div className="container py-8 space-y-6">
             <title>{`#${commentId}|${name}`}</title>
@@ -114,7 +117,7 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
                     </Button>
                 </div>
             </div>
-            <Async autoClick lock={lock} fn={refresh}>刷新</Async>
+            <Async autoClick fn={refresh}>刷新</Async>
             <Separator className="space-y-4"/>
             {data !== undefined && (() => {
                 const {parent, parentId, at, keyWrapped, messageData, messageVector, list} = data
@@ -171,30 +174,15 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
                                             value={msg ?? ''}
                                             onChange={event => setMsg(event.target.value)}
                                         />
-                                        <Async fn={async () => {
-                                            const [vector, data] = await encrypt(res.secret, Buffer.from(msg ?? ''))
-                                            const body = JSON.stringify({
-                                                commentId,
-                                                commentator: res.commentator,
-                                                messageData: to(Buffer.from(data)),
-                                                messageVector: to(Buffer.from(vector)),
-                                            })
-                                            const result = await poster('/api/comment', {
-                                                method: 'POST',
-                                                headers: {Authorization: to(Buffer.from(await sign(res.signKey, Buffer.from(body))))},
-                                                body
-                                            })
-                                            setTarget(result)
-                                            setMsg(undefined)
-                                        }}>创建回复</Async>
+                                        <Create
+                                            res={res}
+                                            commentId={commentId}
+                                            msg={msg}
+                                            setMsg={setMsg}
+                                        />
                                         <Separator className="space-y-4"/>
                                     </>}
-                                <Async lock={lock} fn={async () => {
-                                    if (list.length) {
-                                        const result = parse(await getter(`/api/comment?id=${commentId}&gt=${list[0].id}`))
-                                        setData({...result, list: [...result.list.reverse(), ...list]})
-                                    } else await refresh()
-                                }}>加载更近</Async>
+                                <Async autoPoll fn={loadNew}>加载更近</Async>
                                 <ul className="space-y-4">
                                     {list.map(({id, at, commentator, messageData, messageVector}) =>
                                         <li key={id}>
@@ -218,18 +206,41 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
                                             </div>
                                         </li>)}
                                 </ul>
-                                <Async lock={lock} fn={async () => {
-                                    if (list.length) {
-                                        const result = parse(await getter(`/api/comment?id=${commentId}&lt=${list[list.length - 1].id}`))
-                                        setData({...result, list: [...list, ...result.list]})
-                                    } else await refresh()
-                                }}>加载更远</Async>
+                                <Async fn={loadOld}>加载更远</Async>
                             </>}
                     </Await>
                 )
             })()}
         </div>
     )
+}
+
+function Create({commentId, res, msg, setMsg}: {
+    commentId: number
+    res: {
+        secret: CryptoKey
+        commentator: boolean
+        signKey: CryptoKey
+    }
+    msg: string | undefined
+    setMsg: (value: string | undefined) => void
+}) {
+    const create = useCallback(async () => {
+        const [messageVector, messageData] = await encrypt(res.secret, Buffer.from(msg ?? ''))
+        const body = JSON.stringify({
+            commentId,
+            commentator: res.commentator,
+            messageData: to(Buffer.from(messageData)),
+            messageVector: to(Buffer.from(messageVector)),
+        })
+        await poster('/api/comment', {
+            method: 'POST',
+            headers: {Authorization: to(Buffer.from(await sign(res.signKey, Buffer.from(body))))},
+            body
+        })
+        setMsg(undefined)
+    }, [res, commentId, msg, setMsg])
+    return <Async fn={create}>创建回复</Async>
 }
 
 function Show({secret, messageData, messageVector}: { secret: CryptoKey, messageData: Buffer, messageVector: Buffer }) {

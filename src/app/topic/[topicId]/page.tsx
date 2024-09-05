@@ -4,7 +4,7 @@ import {name} from "../../../../public/manifest.json";
 import client from "@/client";
 import get from "@/prisma/topic/get";
 import {useRouter} from "next/navigation";
-import {useMemo, useState} from "react";
+import {useCallback, useMemo, useState} from "react";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import idSchema from "@/client/idSchema";
 import {z} from "zod";
@@ -52,11 +52,28 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
     const [data, setData] = useState<ReturnType<typeof parse>>()
     const [msg, setMsg] = useLocalStorage(`msg->${topicId}`)
     const {push} = useRouter()
-    const refresh = async () => {
+    const refresh = useCallback(async () => {
         const result = parse(await getter(`/api/topic?id=${topicId}`))
         setData(result)
-    }
-    const lock = useState(false)
+    }, [topicId])
+    const loadNew = useCallback(async () => {
+        if (data?.list.length) {
+            const result = parse(await getter(`/api/topic?id=${topicId}&gt=${data.list[0].id}`))
+            setData(data => data === undefined ? result : {
+                ...result,
+                list: [...result.list, ...data.list]
+            })
+        } else await refresh()
+    }, [data, refresh, topicId])
+    const loadOld = useCallback(async () => {
+        if (data?.list.length) {
+            const result = parse(await getter(`/api/topic?id=${topicId}&lt=${data.list[data.list.length - 1].id}`))
+            setData(data => data === undefined ? result : {
+                ...result,
+                list: [...data.list, ...result.list]
+            })
+        } else await refresh()
+    }, [data, refresh, topicId])
     return (
         <div className="container py-8 space-y-6">
             <title>{`>${topicId}|${name}`}</title>
@@ -79,7 +96,7 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                     </Button>
                 </div>
             </div>
-            <Async lock={lock} autoClick fn={refresh}>刷新</Async>
+            <Async autoClick fn={refresh}>刷新</Async>
             <Separator className="space-y-4"/>
             {data !== undefined && (() => {
                 const {keyWrap, at, message, list} = data
@@ -104,35 +121,16 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                         />
                         <Await fn={() => importWrapKey(keyWrap)}>
                             {res =>
-                                <Async fn={async () => {
-                                    const key = await generateSymmetricKey()
-                                    const [vector, data] = await encrypt(key, Buffer.from(msg ?? ''))
-                                    const {signKey, verifyKey} = await generateDigitalKey()
-                                    const body = JSON.stringify({
-                                        topicId,
-                                        keyVerify: to(Buffer.from(await exportVerifyKey(verifyKey))),
-                                        keyWrapped: to(Buffer.from(await wrap(key, res))),
-                                        messageData: to(Buffer.from(data)),
-                                        messageVector: to(Buffer.from(vector)),
-                                    })
-                                    const id = idSchema.parse(await poster('/api/topic', {
-                                        method: 'POST',
-                                        headers: {Authorization: to(Buffer.from(await sign(signKey, Buffer.from(body))))},
-                                        body
-                                    }))
-                                    localStorage.setItem(`signKey->${id}`, to(Buffer.from(await exportSignKey(signKey))))
-                                    localStorage.setItem(`key->${id}`, to(Buffer.from(await exportKey(key))))
-                                    setMsg(undefined)
-                                    push(`/comment/${id}`)
-                                }}>创建评论</Async>}
+                                <Create
+                                    res={res}
+                                    topicId={topicId}
+                                    msg={msg}
+                                    setMsg={setMsg}
+                                    push={push}
+                                />}
                         </Await>
                         <Separator className="space-y-4"/>
-                        <Async lock={lock} fn={async () => {
-                            if (list.length) {
-                                const result = parse(await getter(`/api/topic?id=${topicId}&gt=${list[0].id}`))
-                                setData({...result, list: [...result.list.reverse(), ...list]})
-                            } else await refresh()
-                        }}>加载更近</Async>
+                        <Async autoPoll fn={loadNew}>加载更近</Async>
                         <Await fn={async () => {
                             const unwrapKeyData = localStorage.getItem(`unwrapKey-${topicId}`)
                             return unwrapKeyData === null ? undefined : importUnwrapKey(from(unwrapKeyData))
@@ -161,17 +159,43 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                                         </li>)}
                                 </ul>}
                         </Await>
-                        <Async lock={lock} fn={async () => {
-                            if (list.length) {
-                                const result = parse(await getter(`/api/topic?id=${topicId}&lt=${list[list.length - 1].id}`))
-                                setData({...result, list: [...list, ...result.list]})
-                            } else await refresh()
-                        }}>加载更远</Async>
+                        <Async fn={loadOld}>加载更远</Async>
                     </>
                 )
             })()}
         </div>
     )
+}
+
+function Create({res, topicId, msg, setMsg, push}: {
+    res: CryptoKey
+    topicId: number
+    msg: string | undefined
+    setMsg: (value: string | undefined) => void
+    push: (value: string) => void
+}) {
+    const create = useCallback(async () => {
+        const key = await generateSymmetricKey()
+        const [vector, data] = await encrypt(key, Buffer.from(msg ?? ''))
+        const {signKey, verifyKey} = await generateDigitalKey()
+        const body = JSON.stringify({
+            topicId,
+            keyVerify: to(Buffer.from(await exportVerifyKey(verifyKey))),
+            keyWrapped: to(Buffer.from(await wrap(key, res))),
+            messageData: to(Buffer.from(data)),
+            messageVector: to(Buffer.from(vector)),
+        })
+        const id = idSchema.parse(await poster('/api/topic', {
+            method: 'POST',
+            headers: {Authorization: to(Buffer.from(await sign(signKey, Buffer.from(body))))},
+            body
+        }))
+        localStorage.setItem(`signKey->${id}`, to(Buffer.from(await exportSignKey(signKey))))
+        localStorage.setItem(`key->${id}`, to(Buffer.from(await exportKey(key))))
+        setMsg(undefined)
+        push(`/comment/${id}`)
+    }, [res, topicId, msg, setMsg, push])
+    return <Async fn={create}>创建评论</Async>
 }
 
 function Show({id, unwrapKey, keyWrapped, messageData, messageVector}: {

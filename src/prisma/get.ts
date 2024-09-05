@@ -2,7 +2,7 @@ import prisma from "@/prisma/index";
 
 export default async ({lt, gt}: { lt?: number, gt?: number }) => {
     if (lt !== undefined && gt !== undefined) throw new Error('不能同时有lt和gt')
-    return (await prisma.topic.findMany({
+    const list = (await prisma.topic.findMany({
         ...lt !== undefined ? {where: {id: {lt}}} : gt !== undefined && {where: {id: {gt}}},
         orderBy: {
             id: gt !== undefined ? 'asc' : 'desc'
@@ -13,7 +13,9 @@ export default async ({lt, gt}: { lt?: number, gt?: number }) => {
             createdAt: true,
             message: true
         }
-    })).map(({id, createdAt, message}) => ({
+    }))
+    if (gt !== undefined) list.reverse()
+    return list.map(({id, createdAt, message}) => ({
         id,
         create: createdAt.valueOf(),
         message

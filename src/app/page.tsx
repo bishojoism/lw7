@@ -1,6 +1,6 @@
 'use client'
 
-import {useState} from "react";
+import {useCallback, useState} from "react";
 import {useRouter} from "next/navigation";
 import {exportSignKey, exportVerifyKey, generateDigitalKey, sign} from "@/crypto/digital";
 import {exportUnwrapKey, exportWrapKey, generateAsymmetricKey} from "@/crypto/asymmetric";
@@ -34,11 +34,40 @@ export default function Page() {
     const [data, setData] = useState<ReturnType<typeof parse>>()
     const [msg, setMsg] = useLocalStorage('msg')
     const {push} = useRouter()
-    const refresh = async () => {
+    const refresh = useCallback(async () => {
         const result = parse(await getter('/api'))
         setData(result)
-    }
-    const lock = useState(false)
+    }, [])
+    const create = useCallback(async () => {
+        const {wrapKey, unwrapKey} = await generateAsymmetricKey()
+        const {signKey, verifyKey} = await generateDigitalKey()
+        const body = JSON.stringify({
+            keyVerify: to(Buffer.from(await exportVerifyKey(verifyKey))),
+            keyWrap: to(Buffer.from(await exportWrapKey(wrapKey))),
+            message: msg ?? ''
+        })
+        const id = idSchema.parse(await poster('/api', {
+            method: 'POST',
+            headers: {Authorization: to(Buffer.from(await sign(signKey, Buffer.from(body))))},
+            body
+        }))
+        localStorage.setItem(`signKey-${id}`, to(Buffer.from(await exportSignKey(signKey))))
+        localStorage.setItem(`unwrapKey-${id}`, to(Buffer.from(await exportUnwrapKey(unwrapKey))))
+        setMsg(undefined)
+        push(`/topic/${id}`)
+    }, [msg, setMsg, push])
+    const loadNew = useCallback(async () => {
+        if (data?.length) {
+            const list = parse(await getter(`/api?gt=${data[0].id}`))
+            setData(data => data === undefined ? list : [...list, ...data])
+        } else await refresh()
+    }, [data, refresh])
+    const loadOld = useCallback(async () => {
+        if (data?.length) {
+            const list = parse(await getter(`/api?lt=${data[data.length - 1].id}`))
+            setData(data => data === undefined ? list : [...data, ...list])
+        } else await refresh()
+    }, [data, refresh])
     return (
         <div className="container py-8 space-y-6">
             <title>{`首页|${name}`}</title>
@@ -52,7 +81,7 @@ export default function Page() {
                     <Download className="w-4 h-4"/>
                 </Button>
             </div>
-            <Async autoClick fn={refresh} lock={lock}>刷新</Async>
+            <Async autoClick fn={refresh}>刷新</Async>
             <Separator className="space-y-4"/>
             {data !== undefined && <>
                 <Textarea
@@ -62,31 +91,9 @@ export default function Page() {
                     value={msg ?? ''}
                     onChange={event => setMsg(event.target.value)}
                 />
-                <Async fn={async () => {
-                    const {wrapKey, unwrapKey} = await generateAsymmetricKey()
-                    const {signKey, verifyKey} = await generateDigitalKey()
-                    const body = JSON.stringify({
-                        keyVerify: to(Buffer.from(await exportVerifyKey(verifyKey))),
-                        keyWrap: to(Buffer.from(await exportWrapKey(wrapKey))),
-                        message: msg ?? ''
-                    })
-                    const id = idSchema.parse(await poster('/api', {
-                        method: 'POST',
-                        headers: {Authorization: to(Buffer.from(await sign(signKey, Buffer.from(body))))},
-                        body
-                    }))
-                    localStorage.setItem(`signKey-${id}`, to(Buffer.from(await exportSignKey(signKey))))
-                    localStorage.setItem(`unwrapKey-${id}`, to(Buffer.from(await exportUnwrapKey(unwrapKey))))
-                    setMsg(undefined)
-                    push(`/topic/${id}`)
-                }}>创建主题</Async>
+                <Async fn={create}>创建主题</Async>
                 <Separator className="space-y-4"/>
-                <Async lock={lock} fn={async () => {
-                    if (data.length) {
-                        const result = parse(await getter(`/api?gt=${data[0].id}`))
-                        setData([...result.reverse(), ...data])
-                    } else await refresh()
-                }}>加载更近</Async>
+                <Async autoPoll fn={loadNew}>加载更近</Async>
                 <ul className="space-y-4">
                     {data.map(({id, at, message}) =>
                         <li key={id}>
@@ -103,12 +110,7 @@ export default function Page() {
                             </Card>
                         </li>)}
                 </ul>
-                <Async lock={lock} fn={async () => {
-                    if (data.length) {
-                        const result = parse(await getter(`/api?lt=${data[data.length - 1].id}`))
-                        setData([...data, ...result])
-                    } else await refresh()
-                }}>加载更远</Async>
+                <Async fn={loadOld}>加载更远</Async>
             </>}
         </div>
     )

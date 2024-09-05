@@ -25,6 +25,7 @@ export default async ({id, lt, gt}: { id: number, lt?: number, gt?: number }) =>
             }
         }
     })
+    if (gt !== undefined) Comment.reverse()
     return {
         create: createdAt.valueOf(),
         keyWrap: to(keyWrap),
