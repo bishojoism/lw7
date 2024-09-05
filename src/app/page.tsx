@@ -86,7 +86,6 @@ export default function Page() {
             {data !== undefined && <>
                 <Textarea
                     className="resize-none my-4"
-                    autoFocus
                     placeholder="内容将公开可见"
                     value={msg ?? ''}
                     onChange={event => setMsg(event.target.value)}

@@ -169,7 +169,6 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
                                     <>
                                         <Textarea
                                             className="resize-none my-4"
-                                            autoFocus
                                             placeholder="内容将受端到端加密保护"
                                             value={msg ?? ''}
                                             onChange={event => setMsg(event.target.value)}
