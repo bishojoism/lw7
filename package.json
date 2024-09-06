@@ -2,6 +2,7 @@
   "name": "lw7",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "migrate": "dotenv -e .env.local prisma migrate dev",
     "postinstall": "prisma generate",
