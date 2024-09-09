@@ -21,6 +21,7 @@ import {Download, Home, Lock} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import Anchor from "@/components/Anchor";
 import {Separator} from "@/components/ui/separator";
+import MDX from "@/components/MDX";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -104,11 +105,13 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                     <>
                         <Card className="mt-4">
                             <CardHeader>
-                                <CardTitle>{">"}{topicId}</CardTitle>
+                                <CardTitle>
+                                    <Anchor href={`/topic/${topicId}`}>{">"}{topicId}</Anchor>
+                                </CardTitle>
                                 <CardDescription>{at}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p className="whitespace-pre-wrap break-all">{message}</p>
+                                <MDX>{message}</MDX>
                             </CardContent>
                         </Card>
                         <Separator className="space-y-4"/>
@@ -211,7 +214,7 @@ function Show({id, unwrapKey, keyWrapped, messageData, messageVector}: {
                 unwrapKey && Buffer.from(await decrypt(await unwrap(keyWrapped, unwrapKey), [messageVector, messageData])).toString() :
                 Buffer.from(await decrypt(await importKey(from(keyData)), [messageVector, messageData])).toString()
         }}>
-            {res => res === undefined ? <Lock/> : <p className="whitespace-pre-wrap break-all">{res}</p>}
+            {res => res === undefined ? <Lock/> : <MDX>{res}</MDX>}
         </Await>
     )
 }

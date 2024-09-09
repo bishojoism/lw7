@@ -22,6 +22,7 @@ import to from "@/base64/to";
 import {importUnwrapKey, unwrap} from "@/crypto/asymmetric";
 import {Separator} from "@/components/ui/separator";
 import idSchema from "@/client/idSchema";
+import MDX from "@/components/MDX";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -146,12 +147,14 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
                                         <CardDescription>{parent.at}</CardDescription>
                                     </CardHeader>
                                     <CardContent>
-                                        <p className="whitespace-pre-wrap break-all">{parent.message}</p>
+                                        <MDX>{parent.message}</MDX>
                                     </CardContent>
                                 </Card>
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle>{"#"}{commentId}</CardTitle>
+                                        <CardTitle>
+                                            <Anchor href={`/comment/${commentId}`}>{"#"}{commentId}</Anchor>
+                                        </CardTitle>
                                         <CardDescription>{at}</CardDescription>
                                     </CardHeader>
                                     <CardContent>
@@ -248,7 +251,7 @@ function Show({secret, messageData, messageVector}: { secret: CryptoKey, message
                 Buffer.from(await decrypt(secret, [messageVector, messageData])).toString(),
             [secret, messageData, messageVector]
         )}>
-            {res => <p className="whitespace-pre-wrap break-all">{res}</p>}
+            {res => <MDX>{res}</MDX>}
         </Await>
     )
 }

@@ -18,6 +18,7 @@ import Anchor from "@/components/Anchor";
 import {Button} from "@/components/ui/button";
 import {Download} from "lucide-react";
 import {Separator} from "@/components/ui/separator";
+import MDX from "@/components/MDX";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -104,7 +105,7 @@ export default function Page() {
                                     <CardDescription>{at}</CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="whitespace-pre-wrap break-all">{message}</p>
+                                    <MDX>{message}</MDX>
                                 </CardContent>
                             </Card>
                         </li>)}
