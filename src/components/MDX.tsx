@@ -9,7 +9,7 @@ import "github-markdown-css";
 function MDX({children}: { children: string }) {
     return (
         <Await fn={() => serialize(children)}>
-            {res => <article className="markdown-body p-4"><MDXRemote {...res} components={{RefTopic, RefComment}}/></article>}
+            {res => <article className="markdown-body" style={{background: 'transparent'}}><MDXRemote {...res} components={{RefTopic, RefComment}}/></article>}
         </Await>
     )
 }
