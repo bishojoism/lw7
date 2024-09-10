@@ -17,11 +17,11 @@ import to from "@/base64/to";
 import {decrypt, encrypt, exportKey, generateSymmetricKey, importKey} from "@/crypto/symmetric";
 import Await from "@/components/Await";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {Download, Home, Lock} from "lucide-react";
-import {Button} from "@/components/ui/button";
+import {Lock} from "lucide-react";
 import Anchor from "@/components/Anchor";
 import {Separator} from "@/components/ui/separator";
 import MDX from "@/components/MDX";
+import Buttons from "@/components/Buttons";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -52,7 +52,6 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
     const topicId = useMemo(() => Number(topicId_), [topicId_])
     const [data, setData] = useState<ReturnType<typeof parse>>()
     const [msg, setMsg] = useLocalStorage(`msg->${topicId}`)
-    const {push} = useRouter()
     const refresh = useCallback(async () => {
         const result = parse(await getter(`/api/topic?id=${topicId}`))
         setData(result)
@@ -78,25 +77,7 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
     return (
         <div className="container py-8 space-y-6">
             <title>{`>${topicId}|${name}`}</title>
-            <div className="flex items-center justify-between">
-                <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">主题</h1>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => push('/')}
-                    >
-                        <Home className="w-4 h-4"/>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => push('https://github.com/bishojoism/lw7/releases/latest')}
-                    >
-                        <Download className="w-4 h-4"/>
-                    </Button>
-                </div>
-            </div>
+            <Buttons>主题</Buttons>
             <Async autoClick fn={refresh}>刷新</Async>
             <Separator className="space-y-4"/>
             {data !== undefined && (() => {
@@ -128,7 +109,6 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                                     topicId={topicId}
                                     msg={msg}
                                     setMsg={setMsg}
-                                    push={push}
                                 />}
                         </Await>
                         <Separator className="space-y-4"/>
@@ -169,13 +149,13 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
     )
 }
 
-function Create({res, topicId, msg, setMsg, push}: {
+function Create({res, topicId, msg, setMsg}: {
     res: CryptoKey
     topicId: number
     msg: string | undefined
     setMsg: (value: string | undefined) => void
-    push: (value: string) => void
 }) {
+    const {push} = useRouter()
     const create = useCallback(async () => {
         const key = await generateSymmetricKey()
         const [vector, data] = await encrypt(key, Buffer.from(msg ?? ''))

@@ -5,10 +5,8 @@ import client from "@/client";
 import from from "@/base64/from";
 import {useCallback, useMemo, useState} from "react";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import {useRouter} from "next/navigation";
 import {name} from "@/../public/manifest.json";
-import {Button} from "@/components/ui/button";
-import {Download, Home, Lock} from "lucide-react";
+import {Lock} from "lucide-react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import Await from "@/components/Await";
 import {decrypt, encrypt, importKey} from "@/crypto/symmetric";
@@ -23,6 +21,7 @@ import {importUnwrapKey, unwrap} from "@/crypto/asymmetric";
 import {Separator} from "@/components/ui/separator";
 import idSchema from "@/client/idSchema";
 import MDX from "@/components/MDX";
+import Buttons from "@/components/Buttons";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -73,7 +72,6 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
     const commentId = useMemo(() => Number(commentId_), [commentId_])
     const [data, setData] = useState<ReturnType<typeof parse>>()
     const [msg, setMsg] = useLocalStorage(`msg-#${commentId}`)
-    const {push} = useRouter()
     const refresh = useCallback(async () => {
         const result = parse(await getter(`/api/comment?id=${commentId}`))
         setData(result)
@@ -99,25 +97,7 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
     return (
         <div className="container py-8 space-y-6">
             <title>{`#${commentId}|${name}`}</title>
-            <div className="flex items-center justify-between">
-                <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">评论</h1>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => push('/')}
-                    >
-                        <Home className="w-4 h-4"/>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => push('https://github.com/bishojoism/lw7/releases/latest')}
-                    >
-                        <Download className="w-4 h-4"/>
-                    </Button>
-                </div>
-            </div>
+            <Buttons>评论</Buttons>
             <Async autoClick fn={refresh}>刷新</Async>
             <Separator className="space-y-4"/>
             {data !== undefined && (() => {
