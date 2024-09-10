@@ -10,26 +10,32 @@ import to from "@/base64/to";
 import get from "@/prisma/get";
 import {name} from "@/../public/manifest.json";
 import {z} from "zod";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {Textarea} from "@/components/ui/textarea";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import Async from "@/components/Async";
-import Anchor from "@/components/Anchor";
 import {Separator} from "@/components/ui/separator";
-import MDX from "@/components/MDX";
 import Buttons from "@/components/Buttons";
+import {Textarea} from "@/components/ui/textarea";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
+import Anchor from "@/components/Anchor";
+import MDX from "@/components/MDX";
 
 const poster = client(idSchema)
 const getter = client(z.object({
-    id: z.number(),
-    create: z.number(),
-    message: z.string()
-}).strict().array())
-const parse = (data: Awaited<ReturnType<typeof get>>) => data.map(({id, create, message}) => ({
-    id,
-    at: new Date(create).toLocaleString(),
-    message
-}))
+    announcement: z.string(),
+    list: z.object({
+        id: z.number(),
+        create: z.number(),
+        message: z.string()
+    }).strict().array()
+}).strict())
+const parse = ({announcement, list}: Awaited<ReturnType<typeof get>>) => ({
+    announcement,
+    list: list.map(({id, create, message}) => ({
+        id,
+        at: new Date(create).toLocaleString(),
+        message
+    }))
+})
 export default function Page() {
     const [data, setData] = useState<ReturnType<typeof parse>>()
     const [msg, setMsg] = useLocalStorage('msg')
@@ -57,15 +63,21 @@ export default function Page() {
         push(`/topic/${id}`)
     }, [msg, setMsg, push])
     const loadNew = useCallback(async () => {
-        if (data?.length) {
-            const list = parse(await getter(`/api?gt=${data[0].id}`))
-            setData(data => data === undefined ? list : [...list, ...data])
+        if (data?.list.length) {
+            const result = parse(await getter(`/api?gt=${data.list[0].id}`))
+            setData(data => data === undefined ? result : {
+                ...result,
+                list: [...result.list, ...data.list]
+            })
         } else await refresh()
     }, [data, refresh])
     const loadOld = useCallback(async () => {
-        if (data?.length) {
-            const list = parse(await getter(`/api?lt=${data[data.length - 1].id}`))
-            setData(data => data === undefined ? list : [...data, ...list])
+        if (data?.list.length) {
+            const result = parse(await getter(`/api?lt=${data.list[data.list.length - 1].id}`))
+            setData(data => data === undefined ? result : {
+                ...result,
+                list: [...data.list, ...result.list]
+            })
         } else await refresh()
     }, [data, refresh])
     return (
@@ -74,34 +86,48 @@ export default function Page() {
             <Buttons>首页</Buttons>
             <Async autoClick fn={refresh}>刷新</Async>
             <Separator className="space-y-4"/>
-            {data !== undefined && <>
-                <Textarea
-                    className="resize-none my-4"
-                    placeholder="内容将公开可见"
-                    value={msg ?? ''}
-                    onChange={event => setMsg(event.target.value)}
-                />
-                <Async fn={create}>创建主题</Async>
-                <Separator className="space-y-4"/>
-                <Async autoPoll fn={loadNew}>加载更近</Async>
-                <ul className="space-y-4">
-                    {data.map(({id, at, message}) =>
-                        <li key={id}>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>
-                                        <Anchor href={`/topic/${id}`}>{">"}{id}</Anchor>
-                                    </CardTitle>
-                                    <CardDescription>{at}</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <MDX>{message}</MDX>
-                                </CardContent>
-                            </Card>
-                        </li>)}
-                </ul>
-                <Async fn={loadOld}>加载更远</Async>
-            </>}
+            {data !== undefined && (() => {
+                const {announcement, list} = data
+                return (
+                    <>
+                        <Card className="mt-4">
+                            <CardHeader>
+                                <CardTitle>公告</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <MDX>{announcement}</MDX>
+                            </CardContent>
+                        </Card>
+                        <Separator className="space-y-4"/>
+                        <Textarea
+                            className="resize-none my-4"
+                            placeholder="内容将公开可见"
+                            value={msg ?? ''}
+                            onChange={event => setMsg(event.target.value)}
+                        />
+                        <Async fn={create}>创建主题</Async>
+                        <Separator className="space-y-4"/>
+                        <Async autoPoll fn={loadNew}>加载更近</Async>
+                        <ul className="space-y-4">
+                            {list.map(({id, at, message}) =>
+                                <li key={id}>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>
+                                                <Anchor href={`/topic/${id}`}>{">"}{id}</Anchor>
+                                            </CardTitle>
+                                            <CardDescription>{at}</CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <MDX>{message}</MDX>
+                                        </CardContent>
+                                    </Card>
+                                </li>)}
+                        </ul>
+                        <Async fn={loadOld}>加载更远</Async>
+                    </>
+                )
+            })()}
         </div>
     )
 }
