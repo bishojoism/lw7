@@ -5,7 +5,6 @@ import client from "@/client";
 import from from "@/base64/from";
 import {useCallback, useMemo, useState} from "react";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import {name} from "@/../public/manifest.json";
 import {Lock} from "lucide-react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import Await from "@/components/Await";
@@ -21,7 +20,7 @@ import {importUnwrapKey, unwrap} from "@/crypto/asymmetric";
 import {Separator} from "@/components/ui/separator";
 import idSchema from "@/client/idSchema";
 import MDX from "@/components/MDX";
-import Buttons from "@/components/Buttons";
+import Frame from "@/components/Frame";
 import {Switch} from "@/components/ui/switch";
 import {Label} from "@/components/ui/label";
 
@@ -96,11 +95,7 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
         } else await refresh()
     }, [data, refresh, commentId])
     return (
-        <div className="container py-8 space-y-6">
-            <title>{`#${commentId}|${name}`}</title>
-            <Buttons>评论</Buttons>
-            <Async autoClick fn={refresh}>刷新</Async>
-            <Separator className="space-y-4"/>
+        <Frame title={'#' + commentId} header="评论" actions={<Async autoClick fn={refresh}>刷新</Async>}>
             {data !== undefined && (() => {
                 const {parent, parentId, at, keyWrapped, messageData, messageVector, list} = data
                 return (
@@ -148,10 +143,10 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
                                             />}
                                     </CardContent>
                                 </Card>
-                                <Separator className="space-y-4"/>
+                                <Separator/>
                                 {res && <Has commentId={commentId} res={res}/>}
                                 <Async autoPoll fn={loadNew}>加载更近</Async>
-                                <ul className="space-y-4">
+                                <ul className="space-y-2">
                                     {list.map(({id, at, commentator, messageData, messageVector}) =>
                                         <li key={id}>
                                             <div className={cn("flex", commentator ?
@@ -179,7 +174,7 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
                     </Await>
                 )
             })()}
-        </div>
+        </Frame>
     )
 }
 
@@ -195,10 +190,6 @@ function Has({commentId, res}: {
     const [preview, setPreview] = useState(false)
     return (
         <>
-            <div className="flex items-center space-x-2">
-                <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
-                <Label htmlFor="preview">预览</Label>
-            </div>
             {
                 preview ?
                     <MDX>{msg ?? ''}</MDX> :
@@ -209,14 +200,18 @@ function Has({commentId, res}: {
                         onChange={event => setMsg(event.target.value)}
                     />
             }
-            <Create
-                res={res}
-                commentId={commentId}
-                msg={msg}
-                setMsg={setMsg}
-                setPreview={setPreview}
-            />
-            <Separator className="space-y-4"/>
+            <div className="flex items-center space-x-2">
+                <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
+                <Label htmlFor="preview">预览</Label>
+                <Create
+                    res={res}
+                    commentId={commentId}
+                    msg={msg}
+                    setMsg={setMsg}
+                    setPreview={setPreview}
+                />
+            </div>
+            <Separator/>
         </>
     )
 }

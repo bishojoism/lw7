@@ -23,5 +23,5 @@ export default function Async({fn, children, autoClick, autoPoll}: {
         }
     }, [autoClick, autoPoll, handleClick])
     if (error instanceof Error) return <Report error={error} onRetry={handleClick}/>
-    return <Button variant="secondary" disabled={error === null} onClick={handleClick}>{children}</Button>
+    return <Button variant="secondary" size="sm" disabled={error === null} onClick={handleClick}>{children}</Button>
 }

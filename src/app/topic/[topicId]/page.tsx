@@ -1,6 +1,5 @@
 'use client'
 
-import {name} from "../../../../public/manifest.json";
 import client from "@/client";
 import get from "@/prisma/topic/get";
 import {useRouter} from "next/navigation";
@@ -21,9 +20,9 @@ import {Lock} from "lucide-react";
 import Anchor from "@/components/Anchor";
 import {Separator} from "@/components/ui/separator";
 import MDX from "@/components/MDX";
-import Buttons from "@/components/Buttons";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import Frame from "@/components/Frame";
+import {Switch} from "@/components/ui/switch";
+import {Label} from "@/components/ui/label";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -78,11 +77,7 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
         } else await refresh()
     }, [data, refresh, topicId])
     return (
-        <div className="container py-8 space-y-6">
-            <title>{`>${topicId}|${name}`}</title>
-            <Buttons>主题</Buttons>
-            <Async autoClick fn={refresh}>刷新</Async>
-            <Separator className="space-y-4"/>
+        <Frame title={'>' + topicId} header="主题" actions={<Async autoClick fn={refresh}>刷新</Async>}>
             {data !== undefined && (() => {
                 const {keyWrap, at, message, list} = data
                 return (
@@ -98,11 +93,7 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                                 <MDX>{message}</MDX>
                             </CardContent>
                         </Card>
-                        <Separator className="space-y-4"/>
-                        <div className="flex items-center space-x-2">
-                            <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
-                            <Label htmlFor="preview">预览</Label>
-                        </div>
+                        <Separator/>
                         {
                             preview ?
                                 <MDX>{msg ?? ''}</MDX> :
@@ -113,24 +104,28 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                                     onChange={event => setMsg(event.target.value)}
                                 />
                         }
-                        <Await fn={() => importWrapKey(keyWrap)}>
-                            {res =>
-                                <Create
-                                    res={res}
-                                    topicId={topicId}
-                                    msg={msg}
-                                    setMsg={setMsg}
-                                    setPreview={setPreview}
-                                />}
-                        </Await>
-                        <Separator className="space-y-4"/>
+                        <div className="flex items-center space-x-2">
+                            <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
+                            <Label htmlFor="preview">预览</Label>
+                            <Await fn={() => importWrapKey(keyWrap)}>
+                                {res =>
+                                    <Create
+                                        res={res}
+                                        topicId={topicId}
+                                        msg={msg}
+                                        setMsg={setMsg}
+                                        setPreview={setPreview}
+                                    />}
+                            </Await>
+                        </div>
+                        <Separator/>
                         <Async autoPoll fn={loadNew}>加载更近</Async>
                         <Await fn={async () => {
                             const unwrapKeyData = localStorage.getItem(`unwrapKey-${topicId}`)
                             return unwrapKeyData === null ? undefined : importUnwrapKey(from(unwrapKeyData))
                         }}>
                             {res =>
-                                <ul className="space-y-4">
+                                <ul className="space-y-2">
                                     {list.map(({id, at, keyWrapped, messageData, messageVector}) =>
                                         <li key={id}>
                                             <Card>
@@ -157,7 +152,7 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                     </>
                 )
             })()}
-        </div>
+        </Frame>
     )
 }
 

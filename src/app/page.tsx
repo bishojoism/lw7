@@ -8,12 +8,11 @@ import idSchema from "@/client/idSchema";
 import client from "@/client";
 import to from "@/base64/to";
 import get from "@/prisma/get";
-import {name} from "@/../public/manifest.json";
 import {z} from "zod";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import Async from "@/components/Async";
 import {Separator} from "@/components/ui/separator";
-import Buttons from "@/components/Buttons";
+import Frame from "@/components/Frame";
 import {Textarea} from "@/components/ui/textarea";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import Anchor from "@/components/Anchor";
@@ -85,11 +84,7 @@ export default function Page() {
         } else await refresh()
     }, [data, refresh])
     return (
-        <div className="container py-8 space-y-6">
-            <title>{name}</title>
-            <Buttons>首页</Buttons>
-            <Async autoClick fn={refresh}>刷新</Async>
-            <Separator className="space-y-4"/>
+        <Frame header="首页" actions={<Async autoClick fn={refresh}>刷新</Async>}>
             {data !== undefined && (() => {
                 const {announcement, list} = data
                 return (
@@ -102,11 +97,7 @@ export default function Page() {
                                 <MDX>{announcement}</MDX>
                             </CardContent>
                         </Card>
-                        <Separator className="space-y-4"/>
-                        <div className="flex items-center space-x-2">
-                            <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
-                            <Label htmlFor="preview">预览</Label>
-                        </div>
+                        <Separator/>
                         {
                             preview ?
                                 <MDX>{msg ?? ''}</MDX> :
@@ -117,10 +108,14 @@ export default function Page() {
                                     onChange={event => setMsg(event.target.value)}
                                 />
                         }
-                        <Async fn={create}>创建主题</Async>
-                        <Separator className="space-y-4"/>
+                        <div className="flex items-center space-x-2">
+                            <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
+                            <Label htmlFor="preview">预览</Label>
+                            <Async fn={create}>创建主题</Async>
+                        </div>
+                        <Separator/>
                         <Async autoPoll fn={loadNew}>加载更近</Async>
-                        <ul className="space-y-4">
+                        <ul className="space-y-2">
                             {list.map(({id, at, message}) =>
                                 <li key={id}>
                                     <Card>
@@ -140,6 +135,6 @@ export default function Page() {
                     </>
                 )
             })()}
-        </div>
+        </Frame>
     )
 }

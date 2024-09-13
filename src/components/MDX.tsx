@@ -10,9 +10,11 @@ import Anchor from "@/components/Anchor";
 function MDX({children}: { children: string }) {
     return (
         <Await fn={() => serialize(children)}>
-            {res => <article className="markdown-body" style={{background: 'transparent'}}>
-                <MDXRemote{...res} components={{RefTopic, RefComment, a: (props: any) => <Anchor {...props}/>}}/>
-            </article>}
+            {res =>
+                <article className="markdown-body max-h-32 overflow-auto" style={{background: 'transparent'}}>
+                    <MDXRemote{...res} components={{RefTopic, RefComment, a: (props: any) => <Anchor {...props}/>}}/>
+                </article>
+            }
         </Await>
     )
 }
