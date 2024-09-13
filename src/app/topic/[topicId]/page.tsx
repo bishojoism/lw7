@@ -22,6 +22,8 @@ import Anchor from "@/components/Anchor";
 import {Separator} from "@/components/ui/separator";
 import MDX from "@/components/MDX";
 import Buttons from "@/components/Buttons";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -52,6 +54,7 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
     const topicId = useMemo(() => Number(topicId_), [topicId_])
     const [data, setData] = useState<ReturnType<typeof parse>>()
     const [msg, setMsg] = useLocalStorage(`msg->${topicId}`)
+    const [preview, setPreview] = useState(false)
     const refresh = useCallback(async () => {
         const result = parse(await getter(`/api/topic?id=${topicId}`))
         setData(result)
@@ -96,12 +99,20 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                             </CardContent>
                         </Card>
                         <Separator className="space-y-4"/>
-                        <Textarea
-                            className="resize-none my-4"
-                            placeholder="内容将受端到端加密保护"
-                            value={msg ?? ''}
-                            onChange={event => setMsg(event.target.value)}
-                        />
+                        <div className="flex items-center space-x-2">
+                            <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
+                            <Label htmlFor="preview">预览</Label>
+                        </div>
+                        {
+                            preview ?
+                                <MDX>{msg ?? ''}</MDX> :
+                                <Textarea
+                                    className="resize-none my-4"
+                                    placeholder="内容将受端到端加密保护"
+                                    value={msg ?? ''}
+                                    onChange={event => setMsg(event.target.value)}
+                                />
+                        }
                         <Await fn={() => importWrapKey(keyWrap)}>
                             {res =>
                                 <Create
@@ -109,6 +120,7 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
                                     topicId={topicId}
                                     msg={msg}
                                     setMsg={setMsg}
+                                    setPreview={setPreview}
                                 />}
                         </Await>
                         <Separator className="space-y-4"/>
@@ -149,11 +161,12 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
     )
 }
 
-function Create({res, topicId, msg, setMsg}: {
+function Create({res, topicId, msg, setMsg, setPreview}: {
     res: CryptoKey
     topicId: number
     msg: string | undefined
-    setMsg: (value: string | undefined) => void
+    setMsg: (value: undefined) => void
+    setPreview: (value: false) => void
 }) {
     const {push} = useRouter()
     const create = useCallback(async () => {
@@ -175,8 +188,9 @@ function Create({res, topicId, msg, setMsg}: {
         localStorage.setItem(`signKey->${id}`, to(Buffer.from(await exportSignKey(signKey))))
         localStorage.setItem(`key->${id}`, to(Buffer.from(await exportKey(key))))
         setMsg(undefined)
+        setPreview(false)
         push(`/comment/${id}`)
-    }, [res, topicId, msg, setMsg, push])
+    }, [res, topicId, msg, setMsg, setPreview, push])
     return <Async fn={create}>创建评论</Async>
 }
 

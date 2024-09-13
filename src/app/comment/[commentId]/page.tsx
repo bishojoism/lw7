@@ -22,6 +22,8 @@ import {Separator} from "@/components/ui/separator";
 import idSchema from "@/client/idSchema";
 import MDX from "@/components/MDX";
 import Buttons from "@/components/Buttons";
+import {Switch} from "@/components/ui/switch";
+import {Label} from "@/components/ui/label";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -71,7 +73,6 @@ const parse = ({
 export default function Main({params: {commentId: commentId_}}: { params: { commentId: string } }) {
     const commentId = useMemo(() => Number(commentId_), [commentId_])
     const [data, setData] = useState<ReturnType<typeof parse>>()
-    const [msg, setMsg] = useLocalStorage(`msg-#${commentId}`)
     const refresh = useCallback(async () => {
         const result = parse(await getter(`/api/comment?id=${commentId}`))
         setData(result)
@@ -148,22 +149,7 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
                                     </CardContent>
                                 </Card>
                                 <Separator className="space-y-4"/>
-                                {res &&
-                                    <>
-                                        <Textarea
-                                            className="resize-none my-4"
-                                            placeholder="内容将受端到端加密保护"
-                                            value={msg ?? ''}
-                                            onChange={event => setMsg(event.target.value)}
-                                        />
-                                        <Create
-                                            res={res}
-                                            commentId={commentId}
-                                            msg={msg}
-                                            setMsg={setMsg}
-                                        />
-                                        <Separator className="space-y-4"/>
-                                    </>}
+                                {res && <Has commentId={commentId} res={res}/>}
                                 <Async autoPoll fn={loadNew}>加载更近</Async>
                                 <ul className="space-y-4">
                                     {list.map(({id, at, commentator, messageData, messageVector}) =>
@@ -197,7 +183,45 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
     )
 }
 
-function Create({commentId, res, msg, setMsg}: {
+function Has({commentId, res}: {
+    commentId: number
+    res: {
+        secret: CryptoKey
+        commentator: boolean
+        signKey: CryptoKey
+    }
+}) {
+    const [msg, setMsg] = useLocalStorage(`msg-#${commentId}`)
+    const [preview, setPreview] = useState(false)
+    return (
+        <>
+            <div className="flex items-center space-x-2">
+                <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
+                <Label htmlFor="preview">预览</Label>
+            </div>
+            {
+                preview ?
+                    <MDX>{msg ?? ''}</MDX> :
+                    <Textarea
+                        className="resize-none my-4"
+                        placeholder="内容将受端到端加密保护"
+                        value={msg ?? ''}
+                        onChange={event => setMsg(event.target.value)}
+                    />
+            }
+            <Create
+                res={res}
+                commentId={commentId}
+                msg={msg}
+                setMsg={setMsg}
+                setPreview={setPreview}
+            />
+            <Separator className="space-y-4"/>
+        </>
+    )
+}
+
+function Create({commentId, res, msg, setMsg, setPreview}: {
     commentId: number
     res: {
         secret: CryptoKey
@@ -205,7 +229,8 @@ function Create({commentId, res, msg, setMsg}: {
         signKey: CryptoKey
     }
     msg: string | undefined
-    setMsg: (value: string | undefined) => void
+    setMsg: (value: undefined) => void
+    setPreview: (value: boolean) => void
 }) {
     const create = useCallback(async () => {
         const [messageVector, messageData] = await encrypt(res.secret, Buffer.from(msg ?? ''))
@@ -221,7 +246,8 @@ function Create({commentId, res, msg, setMsg}: {
             body
         })
         setMsg(undefined)
-    }, [res, commentId, msg, setMsg])
+        setPreview(false)
+    }, [res, commentId, msg, setMsg, setPreview])
     return <Async fn={create}>创建回复</Async>
 }
 

@@ -18,6 +18,8 @@ import {Textarea} from "@/components/ui/textarea";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import Anchor from "@/components/Anchor";
 import MDX from "@/components/MDX";
+import {Switch} from "@/components/ui/switch";
+import {Label} from "@/components/ui/label";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -39,6 +41,7 @@ const parse = ({announcement, list}: Awaited<ReturnType<typeof get>>) => ({
 export default function Page() {
     const [data, setData] = useState<ReturnType<typeof parse>>()
     const [msg, setMsg] = useLocalStorage('msg')
+    const [preview, setPreview] = useState(false)
     const {push} = useRouter()
     const refresh = useCallback(async () => {
         const result = parse(await getter('/api'))
@@ -60,8 +63,9 @@ export default function Page() {
         localStorage.setItem(`signKey-${id}`, to(Buffer.from(await exportSignKey(signKey))))
         localStorage.setItem(`unwrapKey-${id}`, to(Buffer.from(await exportUnwrapKey(unwrapKey))))
         setMsg(undefined)
+        setPreview(false)
         push(`/topic/${id}`)
-    }, [msg, setMsg, push])
+    }, [msg, setMsg, setPreview, push])
     const loadNew = useCallback(async () => {
         if (data?.list.length) {
             const result = parse(await getter(`/api?gt=${data.list[0].id}`))
@@ -99,12 +103,20 @@ export default function Page() {
                             </CardContent>
                         </Card>
                         <Separator className="space-y-4"/>
-                        <Textarea
-                            className="resize-none my-4"
-                            placeholder="内容将公开可见"
-                            value={msg ?? ''}
-                            onChange={event => setMsg(event.target.value)}
-                        />
+                        <div className="flex items-center space-x-2">
+                            <Switch id="preview" checked={preview} onCheckedChange={setPreview}/>
+                            <Label htmlFor="preview">预览</Label>
+                        </div>
+                        {
+                            preview ?
+                                <MDX>{msg ?? ''}</MDX> :
+                                <Textarea
+                                    className="resize-none my-4"
+                                    placeholder="内容将公开可见"
+                                    value={msg ?? ''}
+                                    onChange={event => setMsg(event.target.value)}
+                                />
+                        }
                         <Async fn={create}>创建主题</Async>
                         <Separator className="space-y-4"/>
                         <Async autoPoll fn={loadNew}>加载更近</Async>
