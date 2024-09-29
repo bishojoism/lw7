@@ -37,7 +37,6 @@ export default function Page() {
             <title>图片臊子4</title>
             <div className="flex items-center justify-between">
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">图片臊子4</h1>
-                兼容小番茄图片混淆
             </div>
             <div className="flex items-center justify-around space-x-2">
                 <Input ref={ref} type="file" accept="image/*" onInput={() => {
