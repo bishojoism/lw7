@@ -27,6 +27,8 @@ model Comment {
   messageData   Bytes
   messageVector Bytes    @unique
   Reply         Reply[]
+
+  @@index([topicId])
 }
 
 model Reply {
@@ -37,4 +39,6 @@ model Reply {
   commentator   Boolean
   messageData   Bytes
   messageVector Bytes    @unique
+
+  @@index([commentId])
 }
