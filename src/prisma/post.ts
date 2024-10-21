@@ -3,7 +3,11 @@ import {importWrapKey} from "@/crypto/asymmetric";
 
 const sensitive = fetch('https://raw.githubusercontent.com/cjh0613/tencent-sensitive-words/refs/heads/main/sensitive_words_lines.txt')
     .then(res => res.text())
-    .then(value => new RegExp(value.split('\n').join('|')))
+    .then(value => {
+        const words = value.split('\n')
+        words.pop()
+        return new RegExp(words.map(string => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'))
+    })
 
 export default async (data: {
     keyVerify: Buffer
