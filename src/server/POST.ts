@@ -5,7 +5,7 @@ import from from "@/base64/from";
 import auSchema from "@/server/auSchema";
 import post from "@/prisma/post";
 
-const sensitive = await fetch('https://raw.gitmirror.com/konsheng/Sensitive-lexicon/refs/heads/main/Vocabulary/零时-Tencent.txt')
+const sensitive = await fetch('https://raw.githubusercontent.com/konsheng/Sensitive-lexicon/refs/heads/main/Vocabulary/零时-Tencent.txt')
     .then(res => res.text())
     .then(value => {
         const words = value.split('\n')
