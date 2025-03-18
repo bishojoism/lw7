@@ -5,18 +5,10 @@ import from from "@/base64/from";
 import auSchema from "@/server/auSchema";
 import post from "@/prisma/post";
 
-const sensitive = await fetch('https://raw.githubusercontent.com/konsheng/Sensitive-lexicon/refs/heads/main/Vocabulary/零时-Tencent.txt')
-    .then(res => res.text())
-    .then(value => {
-        const words = value.split('\n')
-        words.pop()
-        return new RegExp(words.map(string => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g')
-    })
-
 const schema = z.object({
     keyVerify: z.string().transform(from),
     keyWrap: z.string().transform(from),
-    message: z.string().transform(arg => arg.replaceAll(sensitive, match => '\\*'.repeat(match.length)))
+    message: z.string()
 }).strict()
 
 export default server(async request => {
