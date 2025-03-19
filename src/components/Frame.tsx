@@ -1,7 +1,7 @@
 import {Button} from "@/components/ui/button";
 import {Download, Home} from "lucide-react";
 import {useRouter} from "next/navigation";
-import {ReactNode} from "react";
+import {ReactNode, useEffect, useState} from "react";
 import manifest from "@/../public/manifest.json";
 import {Switch} from "@/components/ui/switch";
 import {Label} from "./ui/label";
@@ -13,6 +13,12 @@ export default function Frame({title, header, actions, children}: {
     children: ReactNode
 }) {
     const {push} = useRouter()
+    const [enabled, setEnabled] = useState(false)
+    useEffect(() => {
+        setInterval(() => {
+            setEnabled(Notification.permission === 'granted')
+        }, 1000)
+    }, [])
     return (
         <div className="container py-6 space-y-4">
             <title>{title ? title + '|' + manifest.name : manifest.name}</title>
@@ -21,8 +27,8 @@ export default function Frame({title, header, actions, children}: {
                 {actions}
                 <div className="flex items-center space-x-2">
                     <Switch
-                        checked={typeof Notification !== 'undefined' && Notification.permission === 'granted'}
-                        disabled={typeof Notification !== 'undefined' && Notification.permission === 'granted'}
+                        checked={enabled}
+                        disabled={enabled}
                         onClick={() => {
                             Notification.requestPermission().then(permission => {
                                 console.log(`获取通知权限${permission === 'granted' ? '成功' : permission === 'denied' ? '失败' : '待定'}`)
