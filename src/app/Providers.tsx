@@ -9,5 +9,8 @@ export default function Providers({children}: { children: ReactNode }) {
         if (dark) document.documentElement.classList.add('dark')
         else document.documentElement.classList.remove('dark')
     }, [dark])
+    useEffect(() => {
+        navigator.serviceWorker.register("sw.js").then(() => console.log('注册service worker成功'))
+    }, [])
     return children
 }
