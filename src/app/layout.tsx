@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: name,
     description,
     manifest: '/manifest.json',
-    icons: icons.map(({src, sizes, type}) => ({url: src, sizes, type}))
+    icons: Array.from(icons).map(({src, sizes, type}) => ({url: src, sizes, type}))
 }
 
 const fontSans = FontSans({
