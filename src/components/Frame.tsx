@@ -21,8 +21,8 @@ export default function Frame({title, header, actions, children}: {
                 {actions}
                 <div className="flex items-center space-x-2">
                     <Switch
-                        checked={Notification.permission === 'granted'}
-                        disabled={Notification.permission === 'granted'}
+                        checked={window.Notification && Notification.permission === 'granted'}
+                        disabled={window.Notification && Notification.permission === 'granted'}
                         onClick={() => {
                             Notification.requestPermission().then(permission => {
                                 console.log(`获取通知权限${permission === 'granted' ? '成功' : permission === 'denied' ? '失败' : '待定'}`)
