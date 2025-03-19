@@ -19,7 +19,7 @@ export default function Frame({title, header, actions, children}: {
             <div className="flex items-center justify-between">
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">{header}</h1>
                 {actions}
-                <div className="space-x-2">
+                <div className="flex items-center space-x-2">
                     <Switch
                         checked={Notification.permission === 'granted'}
                         disabled={Notification.permission === 'granted'}
