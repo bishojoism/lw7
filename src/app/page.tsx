@@ -19,6 +19,7 @@ import Anchor from "@/components/Anchor";
 import MDX from "@/components/MDX";
 import {Switch} from "@/components/ui/switch";
 import {Label} from "@/components/ui/label";
+import notification from "@/app/notification";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -69,7 +70,7 @@ export default function Page() {
         if (data?.list.length) {
             const result = parse(await getter(`/api?gt=${data.list[0].id}`))
             result.list.forEach(({id, at}) => {
-                new Notification(`>${id}`, {body: at})
+                notification(`>${id}`, at)
             })
             setData(data => data === undefined ? result : {
                 ...result,

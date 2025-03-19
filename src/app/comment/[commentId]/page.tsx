@@ -23,6 +23,7 @@ import MDX from "@/components/MDX";
 import Frame from "@/components/Frame";
 import {Switch} from "@/components/ui/switch";
 import {Label} from "@/components/ui/label";
+import notification from "@/app/notification";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -80,7 +81,7 @@ export default function Main({params: {commentId: commentId_}}: { params: { comm
         if (data?.list.length) {
             const result = parse(await getter(`/api/comment?id=${commentId}&gt=${data.list[0].id}`))
             result.list.forEach(({id, at}) => {
-                new Notification(`&${id}`, {body: at})
+                notification(`&${id}`, at)
             })
             setData(data => data === undefined ? result : {
                 ...result,
@@ -235,8 +236,8 @@ function Create({commentId, res, msg, setMsg, setPreview}: {
         const body = JSON.stringify({
             commentId,
             commentator: res.commentator,
-            messageData: to(Buffer.from(messageData)),
-            messageVector: to(Buffer.from(messageVector)),
+            messageData: to(Buffer.from(new Uint8Array(messageData))),
+            messageVector: to(Buffer.from(new Uint8Array(messageVector))),
         })
         await poster('/api/comment', {
             method: 'POST',

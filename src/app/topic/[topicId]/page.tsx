@@ -23,6 +23,7 @@ import MDX from "@/components/MDX";
 import Frame from "@/components/Frame";
 import {Switch} from "@/components/ui/switch";
 import {Label} from "@/components/ui/label";
+import notification from "@/app/notification";
 
 const poster = client(idSchema)
 const getter = client(z.object({
@@ -62,7 +63,7 @@ export default function Page({params: {topicId: topicId_}}: { params: { topicId:
         if (data?.list.length) {
             const result = parse(await getter(`/api/topic?id=${topicId}&gt=${data.list[0].id}`))
             result.list.forEach(({id, at}) => {
-                new Notification(`#${id}`, {body: at})
+                notification(`#${id}`, at)
             })
             setData(data => data === undefined ? result : {
                 ...result,
@@ -175,8 +176,8 @@ function Create({res, topicId, msg, setMsg, setPreview}: {
             topicId,
             keyVerify: to(Buffer.from(await exportVerifyKey(verifyKey))),
             keyWrapped: to(Buffer.from(await wrap(key, res))),
-            messageData: to(Buffer.from(data)),
-            messageVector: to(Buffer.from(vector)),
+            messageData: to(Buffer.from(new Uint8Array(data))),
+            messageVector: to(Buffer.from(new Uint8Array(vector))),
         })
         const id = idSchema.parse(await poster('/api/topic', {
             method: 'POST',

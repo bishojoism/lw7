@@ -3,6 +3,8 @@ import {Download, Home} from "lucide-react";
 import {useRouter} from "next/navigation";
 import {ReactNode} from "react";
 import manifest from "@/../public/manifest.json";
+import {Switch} from "@/components/ui/switch";
+import {Label} from "./ui/label";
 
 export default function Frame({title, header, actions, children}: {
     title?: string
@@ -18,6 +20,16 @@ export default function Frame({title, header, actions, children}: {
                 <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">{header}</h1>
                 {actions}
                 <div className="space-x-2">
+                    <Switch
+                        checked={Notification.permission === 'granted'}
+                        disabled={Notification.permission === 'granted'}
+                        onClick={() => {
+                            Notification.requestPermission().then(permission => {
+                                console.log(`获取通知权限${permission === 'granted' ? '成功' : permission === 'denied' ? '失败' : '待定'}`)
+                            })
+                        }}
+                    />
+                    <Label htmlFor="notification">通知</Label>
                     <Button
                         variant="outline"
                         size="icon"
