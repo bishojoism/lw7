@@ -68,6 +68,9 @@ export default function Page() {
     const loadNew = useCallback(async () => {
         if (data?.list.length) {
             const result = parse(await getter(`/api?gt=${data.list[0].id}`))
+            result.list.forEach(({id, at}) => {
+                new Notification(`>${id}`, {body: at})
+            })
             setData(data => data === undefined ? result : {
                 ...result,
                 list: [...result.list, ...data.list]
