@@ -14,7 +14,7 @@ export default async (data: {
     keyWrap: Buffer
     message: string
 }) => {
-    await importWrapKey(data.keyWrap)
+    await importWrapKey(data.keyWrap.buffer.slice() as ArrayBuffer)
     const match = data.message.match(await sensitive)
     if (match) throw new Error(`触发敏感词“${match.join('”、“')}”`)
     return prisma.topic.create({data, select: {id: true}}).then(({id}) => id)

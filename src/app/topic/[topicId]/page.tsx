@@ -204,8 +204,8 @@ function Show({id, unwrapKey, keyWrapped, messageData, messageVector}: {
         <Await fn={async () => {
             const keyData = localStorage.getItem(`key->${id}`)
             return keyData === null ?
-                unwrapKey && Buffer.from(await decrypt(await unwrap(keyWrapped, unwrapKey), [messageVector, messageData])).toString() :
-                Buffer.from(await decrypt(await importKey(from(keyData)), [messageVector, messageData])).toString()
+                unwrapKey && Buffer.from(await decrypt(await unwrap(keyWrapped.buffer.slice() as ArrayBuffer, unwrapKey), [messageVector.buffer.slice() as ArrayBuffer, messageData.buffer.slice() as ArrayBuffer])).toString() :
+                Buffer.from(await decrypt(await importKey(from(keyData)), [messageVector.buffer.slice() as ArrayBuffer, messageData.buffer.slice() as ArrayBuffer])).toString()
         }}>
             {res => res === undefined ? <Lock/> : <MDX>{res}</MDX>}
         </Await>

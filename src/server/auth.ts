@@ -8,5 +8,5 @@ class AuthError extends Error {
 }
 
 export default async (keyVerify: Buffer, arrayBuffer: ArrayBuffer, au: Buffer) => {
-    if (!await verify(await importVerifyKey(keyVerify), arrayBuffer, au)) throw new AuthError('The signature is forged.')
+    if (!await verify(await importVerifyKey(keyVerify.buffer.slice() as ArrayBuffer), arrayBuffer, au.buffer.slice() as ArrayBuffer)) throw new AuthError('The signature is forged.')
 }

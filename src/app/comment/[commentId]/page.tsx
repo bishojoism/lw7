@@ -253,7 +253,7 @@ function Create({commentId, res, msg, setMsg, setPreview}: {
 function Show({secret, messageData, messageVector}: { secret: CryptoKey, messageData: Buffer, messageVector: Buffer }) {
     return (
         <Await fn={useCallback(async () =>
-                Buffer.from(await decrypt(secret, [messageVector, messageData])).toString(),
+                Buffer.from(await decrypt(secret, [messageVector.buffer.slice() as ArrayBuffer, messageData.buffer.slice() as ArrayBuffer ])).toString(),
             [secret, messageData, messageVector]
         )}>
             {res => <MDX>{res}</MDX>}

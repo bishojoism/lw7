@@ -7,7 +7,7 @@ export const encrypt = async (key: CryptoKey, data: BufferSource) => {
     const iv = crypto.getRandomValues(new Uint8Array(12))
     return [iv, await crypto.subtle.encrypt({...aes, iv}, key, data)]
 }
-export const decrypt = async (key: CryptoKey, encrypted: [Uint8Array, BufferSource]) => {
+export const decrypt = async (key: CryptoKey, encrypted: [BufferSource, BufferSource]) => {
     const [iv, data] = encrypted
     return await crypto.subtle.decrypt({...aes, iv}, key, data)
 }
